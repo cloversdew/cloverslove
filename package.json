@@ -1,1 +1,1 @@
-{"name":"retrial-site","private":true,"type":"module","scripts":{"dev":"vite","build":"vite build"},"devDependencies":{"vite":"^8.3.7"}}
+{"name":"retrial-site","private":true,"type":"module","scripts":{"dev":"vite","build":"vite build","test":"node --test tests/*.test.mjs"},"devDependencies":{"vite":"^8.3.7"}}

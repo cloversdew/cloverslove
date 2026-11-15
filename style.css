@@ -305,7 +305,7 @@ body:not(.is-locked) .home.entering .menu button, body:not(.is-locked) .home.ent
 .dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
 
 /* ================= calm ================= */
-.calm *, .calm *::before, .calm *::after { animation-duration: .001s !important; transition-duration: .001s !important; transition-delay: 0s !important; }
+.calm *, .calm *::before, .calm *::after { animation-duration: .001s !important; animation-iteration-count: 1 !important; animation-delay: 0s !important; transition-duration: .001s !important; transition-delay: 0s !important; }
 
 /* ================= phones ================= */
 @media (max-width: 820px) {
@@ -330,7 +330,7 @@ body:not(.is-locked) .home.entering .menu button, body:not(.is-locked) .home.ent
   .links b { font-size: 26px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after { animation-duration: .001s !important; transition-duration: .001s !important; }
+  *, *::before, *::after { animation-duration: .001s !important; animation-iteration-count: 1 !important; animation-delay: 0s !important; transition-duration: .001s !important; transition-delay: 0s !important; }
 }
 
 /* recently played (music tab) */

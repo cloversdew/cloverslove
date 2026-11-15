@@ -3,16 +3,19 @@
 
   Every sound is synthesized with the Web Audio API, so nothing needs to be
   downloaded. To use your own sounds instead, drop files into
-  public/assets/sfx/ named after the sound, e.g.
+  public/assets/sfx/ and list only those files in CUSTOM_FILES below, e.g.
 
     public/assets/sfx/hover.wav
     public/assets/sfx/select.mp3
 
   Names: hover, select, open, back, toggle, catch, lucky
-  (.mp3, .wav or .ogg). Any file found replaces that synthesized sound.
+  (.mp3, .wav or .ogg). A successfully loaded file replaces that synthesized
+  sound. An empty map keeps all effects local, without probing missing files.
 */
-const NAMES = ["hover", "select", "open", "back", "toggle", "catch", "lucky"];
-const EXTS = ["mp3", "wav", "ogg"];
+const CUSTOM_FILES = {
+  // hover: "/assets/sfx/hover.wav",
+  // select: "/assets/sfx/select.mp3",
+};
 
 let ctx = null;
 let master = null;
@@ -38,16 +41,13 @@ function ensure() {
 
 async function loadFiles() {
   await Promise.all(
-    NAMES.map(async (name) => {
-      for (const ext of EXTS) {
-        try {
-          const r = await fetch(`/assets/sfx/${name}.${ext}`);
-          // dev servers answer missing files with index.html, so check the type
-          if (!r.ok || !(r.headers.get("content-type") || "").startsWith("audio")) continue;
-          files[name] = await ctx.decodeAudioData(await r.arrayBuffer());
-          return;
-        } catch {}
-      }
+    Object.entries(CUSTOM_FILES).map(async ([name, src]) => {
+      try {
+        const r = await fetch(src);
+        // dev servers answer missing files with index.html, so check the type
+        if (!r.ok || !(r.headers.get("content-type") || "").startsWith("audio")) return;
+        files[name] = await ctx.decodeAudioData(await r.arrayBuffer());
+      } catch {} // retain the synthesized effect if a configured file fails
     })
   );
 }

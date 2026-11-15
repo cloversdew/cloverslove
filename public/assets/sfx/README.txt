@@ -1,6 +1,7 @@
 Drop your own sound files here to replace the built-in (synthesized) UI sounds.
+Then list each file in CUSTOM_FILES near the top of sfx.js. Files are not discovered automatically.
 
-Name each file after the sound it replaces, using .mp3, .wav or .ogg:
+Sound names:
 
   hover   - moving over a button / changing the menu selection
   select  - clicking a button or link
@@ -10,6 +11,12 @@ Name each file after the sound it replaces, using .mp3, .wav or .ogg:
   catch   - catching a three-leaf clover
   lucky   - catching a four-leaf clover
 
-Example: hover.wav, open.mp3
+Example (.mp3, .wav or .ogg):
 
-Any sound without a file keeps the built-in version. Reload the page after adding files.
+  const CUSTOM_FILES = {
+    hover: "/assets/sfx/hover.wav",
+    open: "/assets/sfx/open.mp3",
+  };
+
+Unlisted sounds, or files that fail to load, keep the built-in version.
+The default empty map makes no sound-file requests. Reload after changing files or the map.

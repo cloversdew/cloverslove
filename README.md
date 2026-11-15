@@ -19,16 +19,20 @@ npm install
 npm run dev
 ```
 
+run the regression checks with `npm test`, or make a production build with `npm run build`.
+
 ## media
 
 | file | used for |
 | --- | --- |
-| `public/assets/video/rikka-4k.mp4` | background video, full 4K (sleeping rikka from chūnibyō, via moewalls) |
-| `public/assets/video/rikka.mp4` | same video at 1080p, served to phones |
+| `public/assets/video/rikka-poster.webp` | a frame from the video, shown on the entry screen and when motion is off |
+| `public/assets/video/rikka.mp4` | 1080p background on all screens, loaded after entering (sleeping rikka from chūnibyō, via moewalls) |
+| `public/assets/video/rikka-4k.mp4` | original 4K copy, kept in the repo but not loaded by the site |
 | `public/assets/music/background.mp3` | background music (sabbath, from the saya no uta ost) |
 
 neither is mine; they're here for a non-commercial personal site and belong to their owners.
 swap in your own files with the same names to change them.
 
-optional: put your own sound effects in `public/assets/sfx/` (see the readme there) to replace
-the built-in menu blips.
+optional: put your own sound effects in `public/assets/sfx/` and add their paths to
+`CUSTOM_FILES` in `sfx.js` (see the readme there). unlisted sounds keep the built-in blips,
+so the site never has to guess which files exist.

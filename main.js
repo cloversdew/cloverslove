@@ -1,4 +1,5 @@
 import { sfx } from "./sfx.js";
+import { createAsyncCache } from "./lib/async-cache.js";
 
 const DISCORD_ID = "262467539685212160";
 const SECTIONS = ["about", "repos", "socials", "settings"];
@@ -6,6 +7,25 @@ const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 const pad = (n) => String(n).padStart(2, "0");
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+const motionPreference = matchMedia("(prefers-reduced-motion: reduce)");
+const reducedMotion = () => settings.calm || motionPreference.matches;
+let runtimeReady = false;
+async function request(url, options = {}) {
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  options.signal?.addEventListener("abort", abort, { once: true });
+  if (options.signal?.aborted) abort();
+  const timer = setTimeout(abort, 8000);
+  try {
+    const response = await fetch(url, { ...options, signal: controller.signal });
+    // Consume the body within the timeout, not just the response headers.
+    const text = await response.text();
+    return { ok: response.ok, status: response.status, text, json: () => JSON.parse(text) };
+  } finally {
+    clearTimeout(timer);
+    options.signal?.removeEventListener("abort", abort);
+  }
+}
 
 /* ---------- storage (never trusted to exist) ---------- */
 const store = {
@@ -61,10 +81,11 @@ function enterSite(e) {
   if (settings.music) startMusic();
   $("#home").classList.add("entering");
   document.body.classList.remove("is-locked");
+  syncRuntime();
   // the curtains finish in ~1.3s; remove the cover afterwards no matter what
-  setTimeout(() => splash.classList.add("gone"), settings.calm ? 0 : 1400);
+  setTimeout(() => splash.classList.add("gone"), reducedMotion() ? 0 : 1400);
   setTimeout(() => $("#home").classList.remove("entering"), 2200);
-  if (!current) setTimeout(() => menuBtns[sel]?.focus({ preventScroll: true }), 900);
+  setTimeout(() => (current ? $("#back") : menuBtns[sel])?.focus({ preventScroll: true }), reducedMotion() ? 0 : 900);
 }
 $("#splash").addEventListener("click", enterSite);
 $("#splash").addEventListener("keydown", (e) => {
@@ -74,8 +95,10 @@ $("#splash").focus({ preventScroll: true });
 
 /* ---------- clock + birthday ---------- */
 const fmt = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit", hour12: true });
-function tick() {
-  $("#clock").textContent = fmt.format(new Date()).toLowerCase();
+function tick(countdown = false) {
+  const time = fmt.format(new Date()).toLowerCase();
+  if ($("#clock").textContent !== time) $("#clock").textContent = time;
+  if (!countdown) return;
   const now = new Date();
   let next = new Date(now.getFullYear(), 5, 12);
   if (next <= now) next = new Date(now.getFullYear() + 1, 5, 12);
@@ -86,7 +109,6 @@ function tick() {
   $("#bdayCount").textContent = `${d}d ${pad(h)}h ${pad(m)}m ${pad(s)}s`;
 }
 tick();
-setInterval(tick, 1000);
 
 /* ============================================================
    menu + scene camera
@@ -176,6 +198,7 @@ addEventListener("wheel", (e) => {
 }, { passive: true });
 
 addEventListener("keydown", (e) => {
+  if (e.defaultPrevented) return;
   if (!entered) return; // the enter screen handles its own keys
   const typing = e.target.matches("input[type=search]");
   if (!current) {
@@ -199,19 +222,33 @@ function renderSection(name) {
   subs.forEach((sub, i) => {
     const t = document.createElement("button");
     t.role = "tab";
+    t.id = `tab-${name}-${i}`;
+    sub.id = `panel-${name}-${i}`;
+    sub.setAttribute("role", "tabpanel");
+    sub.setAttribute("aria-labelledby", t.id);
+    t.setAttribute("aria-controls", sub.id);
     t.textContent = sub.dataset.sub;
     t.setAttribute("aria-selected", i === 0);
     t.addEventListener("click", () => showSub(sec, i));
+    t.addEventListener("keydown", (e) => {
+      const next = e.key === "ArrowRight" ? (i + 1) % subs.length : e.key === "ArrowLeft" ? (i - 1 + subs.length) % subs.length : e.key === "Home" ? 0 : e.key === "End" ? subs.length - 1 : null;
+      if (next === null) return;
+      e.preventDefault();
+      showSub(sec, next);
+      tabs.children[next].focus();
+    });
     tabs.append(t);
   });
   showSub(sec, 0);
-  if (name === "repos") loadRepos();
-  if (name === "about") { renderMusic(); loadRepos(); loadHistory(); }
 }
 function showSub(sec, i) {
   $$("[data-sub]", sec).forEach((s, j) => (s.hidden = j !== i));
-  $$("#subtabs button").forEach((t, j) => t.setAttribute("aria-selected", j === i));
+  $$("#subtabs button").forEach((t, j) => {
+    t.setAttribute("aria-selected", j === i);
+    t.tabIndex = j === i ? 0 : -1;
+  });
   $("#pane").scrollTop = 0;
+  if (runtimeReady && current === sec.dataset.section) syncRuntime();
 }
 
 const reveals = [$("#columnSlot"), $(".column-head"), $("#subtabs"), $("#pane")];
@@ -227,7 +264,7 @@ async function go(name, { push = true } = {}) {
   if (name && current) {
     // section -> section
     column.classList.add("out");
-    await wait(220);
+    await wait(reducedMotion() ? 0 : 220);
     renderSection(name);
     column.classList.remove("out");
     sectionCamera(SECTIONS.indexOf(name));
@@ -242,26 +279,29 @@ async function go(name, { push = true } = {}) {
     sectionCamera(SECTIONS.indexOf(name));
     void column.offsetWidth;
     column.classList.add("in");
-    $("#back").focus({ preventScroll: true });
+    column.inert = !entered;
+    if (entered) $("#back").focus({ preventScroll: true });
   } else {
     // section -> home
     column.classList.add("out");
     column.classList.remove("in");
-    await wait(settings.calm ? 0 : 200);
+    await wait(reducedMotion() ? 0 : 200);
     const a = brand.getBoundingClientRect();
     body.classList.replace("is-section", "is-home");
     flipBrandFrom(a, $("#homeSlot"));
     homeCamera();
-    menuBtns[sel].focus({ preventScroll: true });
+    $("#home").inert = !entered;
+    if (entered) menuBtns[sel].focus({ preventScroll: true });
   }
   current = name;
-  await wait(settings.calm ? 0 : 450);
+  syncRuntime();
+  await wait(reducedMotion() ? 0 : 450);
   busy = false;
 }
 function flipBrandFrom(a, target) {
   target.append(brand);
   const b = brand.getBoundingClientRect();
-  if (!a.width || !b.width || settings.calm) return;
+  if (!a.width || !b.width || reducedMotion()) return;
   // anchor the scale on the side the brand is aligned to in its new home
   const toRight = getComputedStyle(target).justifyContent === "flex-end";
   brand.style.transformOrigin = toRight ? "top right" : "top left";
@@ -286,10 +326,19 @@ addEventListener("popstate", () => {
 /* ============================================================
    github contributions (drawn as our own grid)
    ============================================================ */
-(async () => {
+let contributionsPromise;
+function loadContributions() {
+  if (contributionsPromise) return contributionsPromise;
+  contributionsPromise = renderContributions();
+  return contributionsPromise;
+}
+async function renderContributions() {
   const grid = $("#ghGrid");
   try {
-    const j = await fetch("https://github-contributions-api.jogruber.de/v4/xtpm?y=last").then((r) => r.json());
+    const response = await request("https://github-contributions-api.jogruber.de/v4/xtpm?y=last");
+    if (!response.ok) throw new Error(response.status);
+    const j = response.json();
+    if (!Array.isArray(j.contributions) || !j.contributions.length) throw new Error("No contributions");
     const days = j.contributions;
     const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
     // pad the first column so each row is a weekday (sun at the top)
@@ -326,7 +375,7 @@ addEventListener("popstate", () => {
     grid.style.display = "block";
     grid.innerHTML = '<img src="https://ghchart.rshah.org/4fc3f7/xtpm" alt="" style="width:100%;filter:invert(1) hue-rotate(180deg);mix-blend-mode:screen" />';
   }
-})();
+}
 
 /* ============================================================
    lanyard presence
@@ -335,14 +384,17 @@ const STATUS = { online: ["#3ba55d", "online"], idle: ["#faa81a", "idle"], dnd: 
 let spotify = null;
 
 // a "play" is a track plus when it started, same as the worker logs it
-const playFrom = (sp) => ({
+const playFrom = (sp) => Number.isFinite(sp.timestamps?.start) && sp.timestamps.start > 0 ? ({
   id: sp.track_id, song: sp.song, artist: sp.artist, album: sp.album, art: sp.album_art_url,
-  start: sp.timestamps?.start ?? Date.now(), end: sp.timestamps?.end ?? null,
-});
+  start: sp.timestamps.start, end: sp.timestamps?.end ?? null,
+}) : null;
 
 function applyPresence(d) {
   const u = d.discord_user;
-  if (u?.avatar) $("#dAvatar").src = `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${u.avatar.startsWith("a_") ? "gif" : "png"}?size=128`;
+  if (u?.avatar) {
+    const avatar = `https://cdn.discordapp.com/avatars/${u.id}/${u.avatar}.${u.avatar.startsWith("a_") ? "gif" : "png"}?size=128`;
+    if ($("#dAvatar").src !== avatar) $("#dAvatar").src = avatar;
+  }
   const [color, label] = STATUS[d.discord_status] || STATUS.offline;
   $("#dDot").style.background = color;
   $("#dDot").style.color = color;
@@ -368,42 +420,82 @@ function applyPresence(d) {
 
 // fallback: plain polling, only used while the live connection is down
 async function presence() {
+  if (!presenceActive || presenceController) return;
+  const controller = new AbortController();
+  presenceController = controller;
   try {
-    const j = await fetch(`https://api.lanyard.rest/v1/users/${DISCORD_ID}`).then((r) => r.json());
-    if (j.success) applyPresence(j.data);
+    const response = await request(`https://api.lanyard.rest/v1/users/${DISCORD_ID}`, { signal: controller.signal });
+    if (!response.ok) return;
+    const j = response.json();
+    if (presenceActive && !controller.signal.aborted && !liveReady && j.success) applyPresence(j.data);
   } catch {
-    $("#msg").textContent = "";
+    // Keep the last known state through a transient disconnect.
+  } finally {
+    if (presenceController === controller) presenceController = null;
   }
 }
 
 /* live presence: Lanyard pushes changes over a websocket the moment Discord
    sees them, instead of us asking every few seconds */
 let liveSocket = null;
+let liveReady = false;
+let presenceActive = false;
+let presenceGeneration = 0;
+let presenceController = null;
+let reconnectTimer, heartbeatTimer, presenceTimer;
 function connectLive(retry = 1000) {
-  let beat;
+  if (!presenceActive) return;
   let ws;
   try { ws = new WebSocket("wss://api.lanyard.rest/socket"); } catch { return; }
+  liveSocket = ws;
   ws.onmessage = (e) => {
-    const m = JSON.parse(e.data);
+    if (!presenceActive || liveSocket !== ws) return;
+    let m;
+    try { m = JSON.parse(e.data); } catch { return; }
+    if (!m || typeof m !== "object") return;
     if (m.op === 1) {
       // hello: start heartbeats, then subscribe
-      beat = setInterval(() => ws.readyState === 1 && ws.send(JSON.stringify({ op: 3 })), m.d.heartbeat_interval);
+      clearInterval(heartbeatTimer);
+      heartbeatTimer = setInterval(() => ws.readyState === 1 && ws.send(JSON.stringify({ op: 3 })), m.d.heartbeat_interval);
       ws.send(JSON.stringify({ op: 2, d: { subscribe_to_id: DISCORD_ID } }));
     } else if (m.op === 0 && (m.t === "INIT_STATE" || m.t === "PRESENCE_UPDATE")) {
-      liveSocket = ws;
+      liveReady = true;
       retry = 1000;
       applyPresence(m.d);
     }
   };
   ws.onclose = () => {
-    clearInterval(beat);
-    if (liveSocket === ws) liveSocket = null;
-    setTimeout(() => connectLive(Math.min(retry * 2, 30000)), retry);
+    if (liveSocket !== ws) return;
+    clearInterval(heartbeatTimer);
+    liveSocket = null;
+    liveReady = false;
+    if (presenceActive) reconnectTimer = setTimeout(() => connectLive(Math.min(retry * 2, 30000)), retry);
   };
 }
-presence();
-connectLive();
-setInterval(() => { if (!liveSocket) presence(); }, 15000);
+function syncPresence(active) {
+  if (active === presenceActive) return;
+  presenceActive = active;
+  const generation = ++presenceGeneration;
+  clearTimeout(reconnectTimer);
+  clearTimeout(presenceTimer);
+  clearInterval(heartbeatTimer);
+  if (!active) {
+    presenceController?.abort();
+    const socket = liveSocket;
+    liveSocket = null;
+    liveReady = false;
+    socket?.close();
+    return;
+  }
+  connectLive();
+  const poll = async () => {
+    if (!presenceActive || generation !== presenceGeneration) return;
+    if (!liveReady) await presence();
+    if (presenceActive && generation === presenceGeneration) presenceTimer = setTimeout(poll, 15000);
+  };
+  // Give the socket a chance to deliver its initial state before polling.
+  presenceTimer = setTimeout(poll, 1500);
+}
 
 /* ============================================================
    repos (live from the github api)
@@ -413,7 +505,8 @@ const LANG_COLORS = {
   C: "#8d9bb0", Python: "#3572a5", Rust: "#dea584", Go: "#00add8", Lua: "#5b6cf0", Java: "#b07219", Shell: "#89e051",
 };
 let repos = null;
-let reposPromise = null;
+let reposAt = 0;
+const repoCache = createAsyncCache({ ttl: 600000 });
 
 function ago(iso) {
   const days = Math.floor((Date.now() - new Date(iso)) / 86400000);
@@ -424,37 +517,50 @@ function ago(iso) {
   return `${Math.floor(days / 365)}y ago`;
 }
 
-function loadRepos() {
-  if (!reposPromise) {
-    reposPromise = (async () => {
+async function loadRepos() {
+  if (reposAt && Date.now() - reposAt >= 600000) {
+    repoCache.invalidate("repos");
+    reposAt = 0;
+  }
+  try {
+    const snapshot = await repoCache.get("repos", async () => {
       // github allows 60 unauthenticated requests an hour, so keep a 10 minute copy
       let data = null;
+      let at = Date.now();
       try {
         const cached = JSON.parse(sessionStorage.getItem("repos2") || "null");
-        if (cached && Date.now() - cached.t < 600000) data = cached.data;
+        if (cached && Array.isArray(cached.data) && Date.now() - cached.t < 600000) {
+          data = cached.data;
+          at = cached.t;
+        }
       } catch {}
       if (!data) {
-        const r = await fetch("https://api.github.com/users/xtpm/repos?sort=pushed&per_page=100");
+        const r = await request("https://api.github.com/users/xtpm/repos?sort=pushed&per_page=100");
         if (!r.ok) throw new Error(r.status);
-        data = (await r.json())
+        data = r.json()
           .filter((x) => !x.fork)
           .map((x) => ({
             name: x.name, desc: x.description, lang: x.language, stars: x.stargazers_count,
             pushed: x.pushed_at, created: x.created_at, url: x.html_url, site: x.homepage,
             branch: x.default_branch, topics: x.topics || [],
           }));
-        try { sessionStorage.setItem("repos2", JSON.stringify({ t: Date.now(), data })); } catch {}
+        at = Date.now();
+        try { sessionStorage.setItem("repos2", JSON.stringify({ t: at, data })); } catch {}
       }
+      return { data, at };
+    });
+    const { data, at } = snapshot;
+    reposAt = at;
+    if (repos !== data) {
       repos = data;
       $("#repoCount").textContent = repos.length;
       drawRepos();
       renderLastWorked();
-    })().catch(() => {
-      reposPromise = null; // allow a retry next time the tab opens
-      $("#repoList").innerHTML = '<p class="empty">couldn\'t reach github right now. <a class="u" href="https://github.com/xtpm" target="_blank" rel="noopener">see them there</a></p>';
-    });
+    }
+  } catch {
+    // Preserve existing rows if revalidation fails; the next visit retries.
+    if (!repos) $("#repoList").innerHTML = '<p class="empty">couldn\'t reach github right now. <a class="u" href="https://github.com/xtpm" target="_blank" rel="noopener">see them there</a></p>';
   }
-  return reposPromise;
 }
 
 /* Turn a README into a short plain-text summary: the descriptive paragraphs
@@ -493,18 +599,16 @@ function summarize(md) {
   };
 }
 
-const readmes = new Map();
-async function readme(r) {
-  if (readmes.has(r.name)) return readmes.get(r.name);
-  let text = null;
-  for (const f of ["README.md", "readme.md", "Readme.md"]) {
-    try {
-      const res = await fetch(`https://raw.githubusercontent.com/xtpm/${r.name}/${r.branch || "main"}/${f}`);
-      if (res.ok) { text = await res.text(); break; }
-    } catch {}
-  }
-  readmes.set(r.name, text);
-  return text;
+const readmes = createAsyncCache({ ttl: 600000 });
+function readme(r) {
+  return readmes.get(`${r.name}/${r.branch || "main"}`, async () => {
+    for (const f of ["README.md", "readme.md", "Readme.md"]) {
+      const res = await request(`https://raw.githubusercontent.com/xtpm/${r.name}/${r.branch || "main"}/${f}`);
+      if (res.ok) return res.text;
+      if (res.status !== 404) throw new Error(res.status);
+    }
+    return null;
+  });
 }
 
 const monthYear = (iso) => new Date(iso).toLocaleDateString("en-US", { month: "short", year: "numeric" }).toLowerCase();
@@ -542,7 +646,14 @@ async function toggleRepo(row, r) {
 
   const inner = $(".repo-more-inner", row);
   inner.innerHTML = '<p class="repo-loading">reading the readme…</p>';
-  const md = await readme(r);
+  let md;
+  try {
+    md = await readme(r);
+  } catch {
+    delete row.dataset.filled;
+    inner.innerHTML = '<p class="repo-loading">couldn\'t load the readme. close and reopen to retry.</p>';
+    return;
+  }
   const { paras, bullets } = md ? summarize(md) : { paras: [], bullets: [] };
 
   inner.innerHTML = "";
@@ -603,7 +714,6 @@ function tickSince() {
   const t = sinceText(Date.now() - new Date(lastRepo.pushed));
   $$("[data-since]").forEach((el) => (el.textContent = t));
 }
-setInterval(tickSince, 1000);
 
 function renderLastWorked() {
   if (!repos || !repos.length) return;
@@ -622,7 +732,7 @@ function openRepo(name) {
   const r = repos && repos.find((x) => x.name === name);
   if (!row || !r) return;
   if (!row.classList.contains("open")) toggleRepo(row, r);
-  row.scrollIntoView({ behavior: settings.calm ? "auto" : "smooth", block: "nearest" });
+  row.scrollIntoView({ behavior: reducedMotion() ? "auto" : "smooth", block: "nearest" });
   row.classList.remove("flash"); void row.offsetWidth; row.classList.add("flash");
 }
 $("#lastWorked").addEventListener("click", () => lastRepo && openRepo(lastRepo.name));
@@ -634,11 +744,17 @@ $("#lastRepoAbout").addEventListener("click", () => {
 });
 
 /* ---------- music tab: what's on spotify ---------- */
-let spTimer;
+let musicSignature = null;
+let updateSpotifyProgress = () => {};
+const musicVisible = () => entered && !document.hidden && current === "about" && !$('[data-sub="music"]').hidden;
 function renderMusic() {
+  if (!musicVisible()) return;
   const el = $("#musicList");
   if (!el) return;
-  clearInterval(spTimer);
+  const signature = JSON.stringify(spotify);
+  if (musicSignature === signature) return updateSpotifyProgress();
+  musicSignature = signature;
+  updateSpotifyProgress = () => {};
   const rows = [];
   const now = document.createElement(spotify ? "a" : "div");
   now.className = "row";
@@ -650,10 +766,13 @@ function renderMusic() {
     $("img", now).src = spotify.album_art_url;
     $("b", now).textContent = spotify.song;
     $("span", now).textContent = spotify.artist;
-    const { start, end } = spotify.timestamps;
-    const step = () => { const bar = $(".sp-progress i", now); if (bar) bar.style.width = `${Math.min(100, ((Date.now() - start) / (end - start)) * 100)}%`; };
-    step();
-    spTimer = setInterval(step, 1000);
+    const { start, end } = spotify.timestamps || {};
+    const bar = $(".sp-progress i", now);
+    updateSpotifyProgress = () => {
+      const progress = Number.isFinite(start) && Number.isFinite(end) && end > start ? Math.max(0, Math.min(100, ((Date.now() - start) / (end - start)) * 100)) : 0;
+      bar.style.width = `${progress}%`;
+    };
+    updateSpotifyProgress();
   } else {
     now.innerHTML = `<span class="ph">spotify<br>quiet</span><div><b>not listening</b><span>nothing is playing right now</span><small>spotify activity shows up here</small></div><em class="tagr"></em>`;
   }
@@ -675,7 +794,8 @@ const playedAgo = (t) => {
 };
 const HISTORY_URL = "https://listening-log.desmixo.workers.dev/";
 let plays = null;
-let playsAt = 0;
+const historyCache = createAsyncCache({ ttl: 30000 });
+const historyRows = new Map();
 
 const samePlay = (a, b) => a.id === b.id && Math.abs(a.start - b.start) < 5000;
 
@@ -689,17 +809,20 @@ function mergePlays(a, b) {
 // a song just finished on this page: show it in the list immediately
 // (the worker logs it too; the merge stops it showing twice)
 function notePlay(p) {
+  if (!p) return;
   plays = mergePlays(plays || [], [p]);
 }
 
-async function loadHistory(force = false) {
-  // refetch at most every 30s unless asked
-  if (!force && playsAt && Date.now() - playsAt < 30000) return renderHistory();
+async function loadHistory() {
   try {
-    const r = await fetch(HISTORY_URL);
-    if (!r.ok) throw new Error(r.status);
-    plays = mergePlays(await r.json(), plays || []);
-    playsAt = Date.now();
+    const history = await historyCache.get("history", async () => {
+      const r = await request(HISTORY_URL);
+      if (!r.ok) throw new Error(r.status);
+      const data = r.json();
+      if (!Array.isArray(data)) throw new Error("Invalid history");
+      return data.filter((p) => p && typeof p.id === "string" && Number.isFinite(p.start) && p.start > 0);
+    });
+    plays = mergePlays(history, plays || []);
   } catch {
     if (!plays) $("#historyList").innerHTML = '<p class="empty">couldn\'t load listening history right now.</p>';
     return;
@@ -708,10 +831,12 @@ async function loadHistory(force = false) {
 }
 
 function renderHistory() {
+  if (!musicVisible()) return;
   const el = $("#historyList");
   if (!el || !plays) return;
   // skip the entry for the song that's playing right now; it's already shown above
-  const items = plays.filter((p, i) => !(i === 0 && spotify && p.id === spotify.track_id));
+  const currentPlay = spotify && playFrom(spotify);
+  const items = plays.filter((p) => !currentPlay || !samePlay(p, currentPlay));
   $("#histCount").textContent = items.length ? `· ${items.length}` : "";
   if (!items.length) {
     el.innerHTML = plays.length
@@ -719,39 +844,38 @@ function renderHistory() {
       : '<p class="empty">nothing logged yet. songs show up here after they play.</p>';
     return;
   }
-  el.replaceChildren(...items.map((p) => {
-    const a = document.createElement("a");
-    a.className = "row";
-    a.href = `https://open.spotify.com/track/${encodeURIComponent(p.id)}`;
-    a.target = "_blank";
-    a.rel = "noopener";
-    a.innerHTML = `<img alt="" loading="lazy" /><div><b></b><span></span></div><em class="tagr"></em>`;
-    $("img", a).src = p.art;
-    $("b", a).textContent = p.song;
-    $("span", a).textContent = p.artist;
+  const activeKeys = new Set();
+  const rows = items.map((p) => {
+    const key = `${p.id}:${p.start}`;
+    activeKeys.add(key);
+    let a = historyRows.get(key);
+    if (!a) {
+      a = document.createElement("a");
+      a.className = "row";
+      a.href = `https://open.spotify.com/track/${encodeURIComponent(p.id)}`;
+      a.target = "_blank";
+      a.rel = "noopener";
+      a.innerHTML = `<img alt="" loading="lazy" /><div><b></b><span></span></div><em class="tagr"></em>`;
+      historyRows.set(key, a);
+    }
+    if ($("img", a).getAttribute("src") !== p.art) $("img", a).src = p.art;
+    if ($("b", a).textContent !== p.song) $("b", a).textContent = p.song;
+    if ($("span", a).textContent !== p.artist) $("span", a).textContent = p.artist;
     $(".tagr", a).textContent = playedAgo(p.start);
     return a;
-  }));
+  });
+  for (const key of historyRows.keys()) if (!activeKeys.has(key)) historyRows.delete(key);
+  if (el.children.length !== rows.length || rows.some((row, i) => el.children[i] !== row)) el.replaceChildren(...rows);
 }
-// keep it fresh while the music tab is open
-setInterval(() => { if (current === "about" && !$('[data-sub="music"]').hidden) loadHistory(true); }, 30000);
 
 /* ============================================================
    settings + sound
    ============================================================ */
-/* Background music: on by default, quiet, and it starts by itself.
-   Browsers refuse sound until the visitor has clicked, tapped or pressed a
-   key once, so if the first try is blocked we start on that first gesture.
-   Drop your track in at public/assets/music/background.mp3; until then the
-   old guitar loop plays instead. */
+/* Background music starts on entry when enabled. The source is assigned
+   on demand so a muted visit never downloads the track. */
 const audio = $("#audio");
 const MUSIC_VOLUME = 0.15;
 const TRACK = "/assets/music/background.mp3";
-const FALLBACK = "/assets/music/voice-of-no-return-guitar.mp3";
-fetch(TRACK, { method: "HEAD" })
-  .then((r) => (r.ok && (r.headers.get("content-type") || "").startsWith("audio") ? TRACK : FALLBACK))
-  .catch(() => FALLBACK)
-  .then((src) => { audio.src = src; if (settings.music) startMusic(); });
 
 // a timer, not requestAnimationFrame: rAF stops in background tabs, which
 // left the music "playing" at volume 0
@@ -774,15 +898,19 @@ function showMusic() {
   $('[data-setting="music"]').checked = settings.music;
 }
 let waitingForGesture = false;
+let musicStarting = false;
 async function startMusic() {
-  if (!audio.src) return;
+  if (!entered || !settings.music || musicStarting) return;
+  if (!audio.getAttribute("src")) audio.src = TRACK;
+  musicStarting = true;
   if (audio.paused) audio.volume = 0;
   try {
     await audio.play();
+    if (!settings.music) { audio.pause(); return; }
     fadeTo(MUSIC_VOLUME);
-  } catch {
+  } catch (error) {
     // blocked until the first click / tap / key press
-    if (waitingForGesture) return;
+    if (waitingForGesture || error.name !== "NotAllowedError") return;
     waitingForGesture = true;
     const go = () => {
       ["pointerdown", "keydown", "touchend"].forEach((ev) => removeEventListener(ev, go, true));
@@ -790,6 +918,8 @@ async function startMusic() {
       if (settings.music) startMusic();
     };
     ["pointerdown", "keydown", "touchend"].forEach((ev) => addEventListener(ev, go, true));
+  } finally {
+    musicStarting = false;
   }
 }
 function setMusic(on) {
@@ -804,14 +934,15 @@ showMusic();
 // safety net: any click or key press makes sure the music is actually audible
 ["pointerdown", "keydown"].forEach((ev) =>
   addEventListener(ev, () => {
-    if (!settings.music || !audio.src) return;
+    if (!entered || !settings.music || !audio.src) return;
     if (audio.paused) startMusic();
     else if (audio.volume < MUSIC_VOLUME * 0.5) fadeTo(MUSIC_VOLUME, 600);
   }, true)
 );
 
 function applySettings() {
-  body.classList.toggle("calm", settings.calm);
+  body.classList.toggle("calm", reducedMotion());
+  if (reducedMotion()) brand.getAnimations().forEach((animation) => animation.cancel());
   sfx.enabled = settings.sfx;
   applyVideo();
   $$("[data-setting]").forEach((i) => (i.checked = !!settings[i.dataset.setting]));
@@ -824,14 +955,82 @@ $$("[data-setting]").forEach((i) =>
     applySettings();
   })
 );
-applySettings();
+motionPreference.addEventListener("change", applySettings);
 
 /* ---------- background video ---------- */
 function applyVideo() {
   const v = $("#bg");
-  if (settings.video && !settings.calm) v.play().catch(() => {});
+  if (entered && !document.hidden && settings.video && !reducedMotion()) {
+    if (!v.getAttribute("src")) v.src = "/assets/video/rikka.mp4";
+    v.play().catch(() => {});
+  }
   else v.pause();
 }
+
+/* Work follows the visible panel. Music playback remains independent so
+   visitors who chose to listen can keep it playing in another tab. */
+let displayTimer, displayCadence = 0;
+let historyTimer, historyActive = false, historyGeneration = 0;
+function syncHistory(active) {
+  if (historyActive === active) return;
+  historyActive = active;
+  const generation = ++historyGeneration;
+  clearTimeout(historyTimer);
+  if (!active) return;
+  const poll = async () => {
+    await loadHistory();
+    if (historyActive && generation === historyGeneration) historyTimer = setTimeout(poll, 30000);
+  };
+  poll();
+}
+function updateVisibleClocks() {
+  const aboutMe = current === "about" && !$('[data-sub="me"]').hidden;
+  tick(aboutMe);
+  if (aboutMe || current === "repos") tickSince();
+  if (musicVisible()) updateSpotifyProgress();
+}
+function scheduleDisplayTick() {
+  if (!displayCadence) return;
+  displayTimer = setTimeout(() => {
+    updateVisibleClocks();
+    scheduleDisplayTick();
+  }, displayCadence - Date.now() % displayCadence);
+}
+function syncRuntime() {
+  if (!runtimeReady) return;
+  const visible = entered && !document.hidden;
+  $("#home").inert = !entered || !!current;
+  column.inert = !entered || !current;
+  $$(".corner").forEach((corner) => { corner.inert = !entered; });
+  applyVideo();
+  syncPresence(visible);
+  const showMusicPanel = musicVisible();
+  syncHistory(showMusicPanel);
+  if (visible) {
+    if (current === "about" && !showMusicPanel) loadContributions();
+    if (current === "about" || current === "repos") loadRepos();
+    if (showMusicPanel) { renderMusic(); renderHistory(); }
+    updateVisibleClocks();
+  }
+  const cadence = !visible ? 0 : current === "about" || current === "repos" ? 1000 : 60000;
+  if (cadence !== displayCadence) {
+    clearTimeout(displayTimer);
+    displayCadence = cadence;
+    if (cadence) scheduleDisplayTick();
+  }
+}
+document.addEventListener("visibilitychange", syncRuntime);
+addEventListener("pagehide", () => {
+  syncPresence(false);
+  syncHistory(false);
+  clearTimeout(displayTimer);
+  displayCadence = 0;
+  $("#bg").pause();
+});
+addEventListener("pageshow", syncRuntime);
+runtimeReady = true;
+applySettings();
+syncRuntime();
 
 /* ---------- open a deep link (#repos etc.) once everything above exists ---------- */
 {
