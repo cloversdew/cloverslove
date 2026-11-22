@@ -13,17 +13,16 @@
   <link rel="stylesheet" href="/style.css" />
 </head>
 <body class="is-home is-locked">
-  <!-- ========== background ========== -->
+
   <div class="world" aria-hidden="true">
     <div class="scene" id="scene">
-      <!-- Same scene; defer the 1080p loop until entry and motion checks. -->
+
       <video id="bg" muted loop playsinline preload="none" poster="/assets/video/rikka-poster.webp"></video>
     </div>
     <div class="tint"></div>
     <div class="scan"></div>
   </div>
 
-  <!-- ========== enter screen ========== -->
   <div class="splash" id="splash" role="button" tabindex="0" aria-label="enter the site">
     <div class="curtain top" aria-hidden="true"></div>
     <div class="curtain bottom" aria-hidden="true"></div>
@@ -35,7 +34,6 @@
     <p class="splash-foot">its all luck</p>
   </div>
 
-  <!-- ========== home ========== -->
   <div class="home" id="home" inert>
     <div class="brand-slot" id="homeSlot">
       <a class="brand" id="brand" href="#" aria-label="dylan, cybersecurity student. back to menu" data-nav>
@@ -54,7 +52,6 @@
     <p class="home-hint">its all luck</p>
   </div>
 
-  <!-- ========== section column ========== -->
   <div class="column" id="column" aria-live="polite" inert>
     <div class="column-brand" id="columnSlot"></div>
 
@@ -66,7 +63,7 @@
     <div class="subtabs" id="subtabs" role="tablist"></div>
 
     <div class="pane" id="pane">
-      <!-- ABOUT -->
+
       <section data-section="about" data-title="about me" hidden>
         <div data-sub="me">
           <div class="hello">
@@ -77,7 +74,7 @@
             </div>
           </div>
           <p>i'm 20, studying cybersecurity and building things on the side out of pennsylvania.</p>
-          <p>mostly web tools, interfaces, and little corners of the internet like this one. the code lives on <a class="u" href="https://github.com/xtpm" target="_blank" rel="noopener">github</a>.</p>
+          <p>mostly web tools, interfaces, and little corners of the internet like this one. the code lives on <a class="u" href="https://github.com/cloversdew" target="_blank" rel="noopener">github</a>.</p>
           <p>the rest of the time i'm hunting for <a class="u" href="https://www.discogs.com/user/bypassing" target="_blank" rel="noopener">cds</a>. lots of shibuya-kei, some hyperpop, and anything Lamp ever put out.</p>
 
           <dl class="facts">
@@ -95,14 +92,14 @@
             </div>
           </dl>
 
-          <a class="gh" href="https://github.com/xtpm" target="_blank" rel="noopener" aria-label="github contributions for xtpm">
+          <a class="gh" href="https://github.com/cloversdew" target="_blank" rel="noopener" aria-label="github contributions for cloversdew">
             <span class="gh-head"><span>github</span><span id="ghTotal"></span></span>
             <span class="gh-months" id="ghMonths"></span>
             <span class="gh-grid" id="ghGrid"></span>
           </a>
 
           <div class="icons">
-            <a href="https://github.com/xtpm" target="_blank" rel="noopener" aria-label="github"><i class="ico" style="--i:url(https://cdn.jsdelivr.net/npm/simple-icons@13.0.0/icons/github.svg)"></i></a>
+            <a href="https://github.com/cloversdew" target="_blank" rel="noopener" aria-label="github"><i class="ico" style="--i:url(https://cdn.jsdelivr.net/npm/simple-icons@13.0.0/icons/github.svg)"></i></a>
             <a href="https://www.discogs.com/user/bypassing" target="_blank" rel="noopener" aria-label="discogs"><i class="ico" style="--i:url(https://cdn.jsdelivr.net/npm/simple-icons@13.0.0/icons/discogs.svg)"></i></a>
             <a href="https://x.com/retrialed" target="_blank" rel="noopener" aria-label="x"><i class="ico" style="--i:url(https://cdn.jsdelivr.net/npm/simple-icons@13.0.0/icons/x.svg)"></i></a>
             <a href="https://instagram.com/0mkx" target="_blank" rel="noopener" aria-label="instagram"><i class="ico" style="--i:url(https://cdn.jsdelivr.net/npm/simple-icons@13.0.0/icons/instagram.svg)"></i></a>
@@ -120,11 +117,10 @@
         </div>
       </section>
 
-      <!-- REPOS -->
       <section data-section="repos" data-title="repos" hidden>
         <div data-sub="repos">
           <h2>things i've built</h2>
-          <p class="sub-note"><span id="repoCount">…</span> public repos, newest first. all on <a class="u" href="https://github.com/xtpm" target="_blank" rel="noopener">github</a></p>
+          <p class="sub-note"><span id="repoCount">…</span> public repos, newest first. all on <a class="u" href="https://github.com/cloversdew" target="_blank" rel="noopener">github</a></p>
           <button class="last-worked" id="lastWorked" hidden>
             <span class="lw-label"><i class="lw-dot"></i>last worked on</span>
             <b id="lastRepoName"></b>
@@ -135,11 +131,10 @@
         </div>
       </section>
 
-      <!-- SOCIALS -->
       <section data-section="socials" data-title="socials" hidden>
         <div data-sub="links">
           <div class="links">
-            <a href="https://github.com/xtpm" target="_blank" rel="noopener"><b>github</b><span>xtpm</span></a>
+            <a href="https://github.com/cloversdew" target="_blank" rel="noopener"><b>github</b><span>cloversdew</span></a>
             <a href="https://www.discogs.com/user/bypassing" target="_blank" rel="noopener"><b>discogs</b><span>bypassing</span></a>
             <a href="https://x.com/retrialed" target="_blank" rel="noopener"><b>x</b><span>retrialed</span></a>
             <a href="https://instagram.com/0mkx" target="_blank" rel="noopener"><b>instagram</b><span>0mkx</span></a>
@@ -150,7 +145,6 @@
         </div>
       </section>
 
-      <!-- SETTINGS -->
       <section data-section="settings" data-title="settings" hidden>
         <div data-sub="settings">
           <div class="settings">
@@ -163,7 +157,6 @@
     </div>
   </div>
 
-  <!-- ========== corners ========== -->
   <div class="corner bl" inert>
     <button class="cbtn" id="soundBtn" aria-pressed="false"><i class="eq"><b></b><b></b><b></b></i><span id="soundState">music off</span></button>
   </div>

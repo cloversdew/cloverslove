@@ -1,20 +1,5 @@
-/*
-  UI sound effects.
-
-  Every sound is synthesized with the Web Audio API, so nothing needs to be
-  downloaded. To use your own sounds instead, drop files into
-  public/assets/sfx/ and list only those files in CUSTOM_FILES below, e.g.
-
-    public/assets/sfx/hover.wav
-    public/assets/sfx/select.mp3
-
-  Names: hover, select, open, back, toggle, catch, lucky
-  (.mp3, .wav or .ogg). A successfully loaded file replaces that synthesized
-  sound. An empty map keeps all effects local, without probing missing files.
-*/
 const CUSTOM_FILES = {
-  // hover: "/assets/sfx/hover.wav",
-  // select: "/assets/sfx/select.mp3",
+
 };
 
 let ctx = null;
@@ -30,7 +15,7 @@ function ensure() {
     ctx = new AC();
     master = ctx.createGain();
     master.gain.value = 0.55;
-    // a little air on top so the blips feel "glassy"
+
     const comp = ctx.createDynamicsCompressor();
     master.connect(comp).connect(ctx.destination);
     loadFiles();
@@ -44,10 +29,10 @@ async function loadFiles() {
     Object.entries(CUSTOM_FILES).map(async ([name, src]) => {
       try {
         const r = await fetch(src);
-        // dev servers answer missing files with index.html, so check the type
+
         if (!r.ok || !(r.headers.get("content-type") || "").startsWith("audio")) return;
         files[name] = await ctx.decodeAudioData(await r.arrayBuffer());
-      } catch {} // retain the synthesized effect if a configured file fails
+      } catch {}
     })
   );
 }
@@ -86,7 +71,6 @@ function tick(vol = 0.05, t = 0, hp = 4000) {
   src.start(now);
 }
 
-/* clean, minimal menu sounds: a soft tick + a pure tone */
 const synth = {
   hover() {
     tick(0.035, 0, 5000);
@@ -123,14 +107,14 @@ const synth = {
 export const sfx = {
   set enabled(v) { enabled = v; },
   get enabled() { return enabled; },
-  /** call from any user gesture so the browser lets audio start */
+
   unlock() { if (enabled) ensure(); },
   play(name) {
-    // no context until the first click/keypress, so the browser never blocks it
+
     if (!enabled || !ctx || !ensure() || ctx.state !== "running") return;
     if (name === "hover") {
       const now = performance.now();
-      if (now - lastHover < 35) return; // don't machine-gun when sweeping the mouse
+      if (now - lastHover < 35) return;
       lastHover = now;
     }
     if (files[name]) {

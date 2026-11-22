@@ -18,7 +18,7 @@ async function request(url, options = {}) {
   const timer = setTimeout(abort, 8000);
   try {
     const response = await fetch(url, { ...options, signal: controller.signal });
-    // Consume the body within the timeout, not just the response headers.
+
     const text = await response.text();
     return { ok: response.ok, status: response.status, text, json: () => JSON.parse(text) };
   } finally {
@@ -27,14 +27,11 @@ async function request(url, options = {}) {
   }
 }
 
-/* ---------- storage (never trusted to exist) ---------- */
 const store = {
   get(k, d) { try { const v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
 };
-// Music always starts when you enter the site. Turning it off only lasts for
-// this tab (sessionStorage), so an old "off" can't silence every future visit.
-// Everything else is remembered in localStorage as before.
+
 const settings = Object.assign({ sfx: true, video: true, calm: false }, store.get("settings", {}));
 delete settings.sound;
 settings.music = (() => { try { return sessionStorage.getItem("musicOff") !== "1"; } catch { return true; } })();
@@ -45,7 +42,6 @@ const saveSettings = () => {
 };
 sfx.enabled = settings.sfx;
 
-/* ---------- ui sounds: hover + click, everywhere ---------- */
 const INTERACTIVE = "button, a, .opt, input[type=search]";
 let hovered = null;
 addEventListener("pointerdown", () => sfx.unlock(), { capture: true });
@@ -54,22 +50,16 @@ document.addEventListener("pointerover", (e) => {
   const el = e.target.closest(INTERACTIVE);
   if (el === hovered) return;
   hovered = el;
-  // menu buttons sound through select() so wheel/keys and mouse match
+
   if (el && !el.closest("#menu")) sfx.play("hover");
 });
 document.addEventListener("click", (e) => {
   const el = e.target.closest(INTERACTIVE);
-  // [data-nav] elements make their own open/back sound in go()
+
   if (!el || el.closest("[data-nav]") || el.matches("input[type=search]")) return;
   sfx.play(el.matches(".opt, [role=tab]") ? "toggle" : "select");
 });
 
-/* ---------- enter screen ----------
-   Clicking (or Enter / Space) parts the cover like curtains: a gold seam
-   flashes across the middle, then the halves slide away top and bottom,
-   while the scene settles in and the menu slides in.
-   The click also counts as the visitor's first gesture, so music and menu
-   sounds are allowed to start right away. */
 let entered = false;
 function enterSite(e) {
   if (entered) return;
@@ -82,7 +72,7 @@ function enterSite(e) {
   $("#home").classList.add("entering");
   document.body.classList.remove("is-locked");
   syncRuntime();
-  // the curtains finish in ~1.3s; remove the cover afterwards no matter what
+
   setTimeout(() => splash.classList.add("gone"), reducedMotion() ? 0 : 1400);
   setTimeout(() => $("#home").classList.remove("entering"), 2200);
   setTimeout(() => (current ? $("#back") : menuBtns[sel])?.focus({ preventScroll: true }), reducedMotion() ? 0 : 900);
@@ -93,7 +83,6 @@ $("#splash").addEventListener("keydown", (e) => {
 });
 $("#splash").focus({ preventScroll: true });
 
-/* ---------- clock + birthday ---------- */
 const fmt = new Intl.DateTimeFormat("en-US", { timeZone: "America/New_York", hour: "numeric", minute: "2-digit", hour12: true });
 function tick(countdown = false) {
   const time = fmt.format(new Date()).toLowerCase();
@@ -110,15 +99,12 @@ function tick(countdown = false) {
 }
 tick();
 
-/* ============================================================
-   menu + scene camera
-   ============================================================ */
 const body = document.body;
 const menuBtns = $$("#menu button");
 const column = $("#column");
 const brand = $("#brand");
 let sel = 0;
-let current = null; // open section name, or null on home
+let current = null;
 let busy = false;
 
 menuBtns.forEach((b, i) => b.style.setProperty("--n", i));
@@ -130,20 +116,14 @@ function camera(x, y, z) {
   r.setProperty("--cy", `${y}%`);
   r.setProperty("--cz", z);
 }
-// home: the eye sits center; each menu item nudges the frame a little.
-// sections: slide the eye left so it stays visible beside the column.
-// home: push the scene right and in a little so the character on the cliff
-// sits just beside the menu instead of behind it; each item nudges the frame.
-// sections: ease back so the left side of the landscape stays in view.
-const CHAR_X = 0.42; // where the sleeping character sits across the video frame (0..1)
-const BLEED = 1.14; // .scene is inset -7% on each side
 
-// Work out the pan (% of the scene) and zoom that put the character at
-// screen x = targetX, zooming in only as much as needed to avoid showing edges.
+const CHAR_X = 0.42;
+const BLEED = 1.14;
+
 function frameCharacter(targetX, zMin, zMax = 1.2) {
   const W = innerWidth, H = innerHeight;
   const sw = W * BLEED, sh = H * BLEED;
-  const s = Math.max(sw / 1920, sh / 1080); // object-fit: cover
+  const s = Math.max(sw / 1920, sh / 1080);
   const dispW = 1920 * s;
   const fromCenter = (sw - dispW) / 2 + CHAR_X * dispW - sw / 2;
   let z = zMin, tx = 0;
@@ -158,7 +138,7 @@ function frameCharacter(targetX, zMin, zMax = 1.2) {
 }
 const homeCamera = () => {
   if (innerWidth <= 820) return camera(0, sel * 0.5, 1.02);
-  // clear both the menu and the name above it
+
   const right = Math.max($("#menu").getBoundingClientRect().right, $("#brand").getBoundingClientRect().right);
   const [x, z] = frameCharacter(right + innerWidth * 0.06 + sel * 6, 1.08);
   camera(x, -1 + sel * 0.5, z);
@@ -185,7 +165,6 @@ menuBtns.forEach((b, i) => {
   b.addEventListener("click", () => go(b.dataset.go));
 });
 
-/* wheel moves the selection like a game menu */
 let wheelAcc = 0, wheelLock = 0;
 addEventListener("wheel", (e) => {
   if (current || !entered) return;
@@ -199,7 +178,7 @@ addEventListener("wheel", (e) => {
 
 addEventListener("keydown", (e) => {
   if (e.defaultPrevented) return;
-  if (!entered) return; // the enter screen handles its own keys
+  if (!entered) return;
   const typing = e.target.matches("input[type=search]");
   if (!current) {
     if (["ArrowDown", "s", "S"].includes(e.key)) { e.preventDefault(); select(sel + 1); }
@@ -211,7 +190,6 @@ addEventListener("keydown", (e) => {
   }
 });
 
-/* ---------- section rendering ---------- */
 function renderSection(name) {
   const sec = $(`[data-section="${name}"]`);
   $$("[data-section]").forEach((s) => (s.hidden = s !== sec));
@@ -254,7 +232,6 @@ function showSub(sec, i) {
 const reveals = [$("#columnSlot"), $(".column-head"), $("#subtabs"), $("#pane")];
 reveals.forEach((el, i) => { el.classList.add("reveal"); el.style.setProperty("--n", i); });
 
-/* ---------- navigation ---------- */
 async function go(name, { push = true } = {}) {
   if (busy || name === current) return;
   busy = true;
@@ -262,14 +239,14 @@ async function go(name, { push = true } = {}) {
   sfx.play(!name ? "back" : current ? "select" : "open");
 
   if (name && current) {
-    // section -> section
+
     column.classList.add("out");
     await wait(reducedMotion() ? 0 : 220);
     renderSection(name);
     column.classList.remove("out");
     sectionCamera(SECTIONS.indexOf(name));
   } else if (name) {
-    // home -> section
+
     select(SECTIONS.indexOf(name), true);
     renderSection(name);
     column.classList.remove("out", "in");
@@ -282,7 +259,7 @@ async function go(name, { push = true } = {}) {
     column.inert = !entered;
     if (entered) $("#back").focus({ preventScroll: true });
   } else {
-    // section -> home
+
     column.classList.add("out");
     column.classList.remove("in");
     await wait(reducedMotion() ? 0 : 200);
@@ -302,7 +279,7 @@ function flipBrandFrom(a, target) {
   target.append(brand);
   const b = brand.getBoundingClientRect();
   if (!a.width || !b.width || reducedMotion()) return;
-  // anchor the scale on the side the brand is aligned to in its new home
+
   const toRight = getComputedStyle(target).justifyContent === "flex-end";
   brand.style.transformOrigin = toRight ? "top right" : "top left";
   const dx = toRight ? a.right - b.right : a.left - b.left;
@@ -323,9 +300,6 @@ addEventListener("popstate", () => {
   go(SECTIONS.includes(h) ? h : null, { push: false });
 });
 
-/* ============================================================
-   github contributions (drawn as our own grid)
-   ============================================================ */
 let contributionsPromise;
 function loadContributions() {
   if (contributionsPromise) return contributionsPromise;
@@ -335,13 +309,13 @@ function loadContributions() {
 async function renderContributions() {
   const grid = $("#ghGrid");
   try {
-    const response = await request("https://github-contributions-api.jogruber.de/v4/xtpm?y=last");
+    const response = await request("https://github-contributions-api.jogruber.de/v4/cloversdew?y=last");
     if (!response.ok) throw new Error(response.status);
     const j = response.json();
     if (!Array.isArray(j.contributions) || !j.contributions.length) throw new Error("No contributions");
     const days = j.contributions;
     const MONTHS = ["jan", "feb", "mar", "apr", "may", "jun", "jul", "aug", "sep", "oct", "nov", "dec"];
-    // pad the first column so each row is a weekday (sun at the top)
+
     const lead = new Date(days[0].date + "T00:00").getDay();
     const cells = [];
     for (let i = 0; i < lead; i++) cells.push('<i class="pad"></i>');
@@ -354,7 +328,6 @@ async function renderContributions() {
     $("#ghMonths").style.setProperty("--weeks", weeks);
     grid.style.gridTemplateColumns = `repeat(${weeks}, 1fr)`;
 
-    // a month label above the first week that starts in that month
     const labels = Array(weeks).fill("");
     let lastMonth = -1;
     days.forEach((d, i) => {
@@ -362,7 +335,7 @@ async function renderContributions() {
       const w = Math.floor((i + lead) / 7);
       if (m !== lastMonth && w < weeks - 1) { labels[w] = MONTHS[m]; lastMonth = m; }
     });
-    // skip a label if the previous one is too close to fit
+
     let prev = -9;
     $("#ghMonths").innerHTML = labels.map((t, w) => {
       if (!t || w - prev < 3) return "<span></span>";
@@ -371,19 +344,15 @@ async function renderContributions() {
     }).join("");
     $("#ghTotal").textContent = `${j.total.lastYear} this year`;
   } catch {
-    // if the data service is down, fall back to the plain image
+
     grid.style.display = "block";
-    grid.innerHTML = '<img src="https://ghchart.rshah.org/4fc3f7/xtpm" alt="" style="width:100%;filter:invert(1) hue-rotate(180deg);mix-blend-mode:screen" />';
+    grid.innerHTML = '<img src="https://ghchart.rshah.org/4fc3f7/cloversdew" alt="" style="width:100%;filter:invert(1) hue-rotate(180deg);mix-blend-mode:screen" />';
   }
 }
 
-/* ============================================================
-   lanyard presence
-   ============================================================ */
 const STATUS = { online: ["#3ba55d", "online"], idle: ["#faa81a", "idle"], dnd: ["#ed4245", "do not disturb"], offline: ["#747f8d", "offline"] };
 let spotify = null;
 
-// a "play" is a track plus when it started, same as the worker logs it
 const playFrom = (sp) => Number.isFinite(sp.timestamps?.start) && sp.timestamps.start > 0 ? ({
   id: sp.track_id, song: sp.song, artist: sp.artist, album: sp.album, art: sp.album_art_url,
   start: sp.timestamps.start, end: sp.timestamps?.end ?? null,
@@ -408,8 +377,7 @@ function applyPresence(d) {
   $("#actSub").textContent = act ? [act.details, act.state].filter(Boolean).join(" · ") || "in progress" : "discord is quiet.";
 
   const next = d.listening_to_spotify ? d.spotify : null;
-  // the song changed (or stopped): the one that was playing goes into
-  // "recently played" right away, without waiting for the worker
+
   if (spotify && (!next || next.track_id !== spotify.track_id || next.timestamps?.start !== spotify.timestamps?.start)) {
     notePlay(playFrom(spotify));
   }
@@ -418,7 +386,6 @@ function applyPresence(d) {
   renderHistory();
 }
 
-// fallback: plain polling, only used while the live connection is down
 async function presence() {
   if (!presenceActive || presenceController) return;
   const controller = new AbortController();
@@ -429,14 +396,12 @@ async function presence() {
     const j = response.json();
     if (presenceActive && !controller.signal.aborted && !liveReady && j.success) applyPresence(j.data);
   } catch {
-    // Keep the last known state through a transient disconnect.
+
   } finally {
     if (presenceController === controller) presenceController = null;
   }
 }
 
-/* live presence: Lanyard pushes changes over a websocket the moment Discord
-   sees them, instead of us asking every few seconds */
 let liveSocket = null;
 let liveReady = false;
 let presenceActive = false;
@@ -454,7 +419,7 @@ function connectLive(retry = 1000) {
     try { m = JSON.parse(e.data); } catch { return; }
     if (!m || typeof m !== "object") return;
     if (m.op === 1) {
-      // hello: start heartbeats, then subscribe
+
       clearInterval(heartbeatTimer);
       heartbeatTimer = setInterval(() => ws.readyState === 1 && ws.send(JSON.stringify({ op: 3 })), m.d.heartbeat_interval);
       ws.send(JSON.stringify({ op: 2, d: { subscribe_to_id: DISCORD_ID } }));
@@ -493,13 +458,10 @@ function syncPresence(active) {
     if (!liveReady) await presence();
     if (presenceActive && generation === presenceGeneration) presenceTimer = setTimeout(poll, 15000);
   };
-  // Give the socket a chance to deliver its initial state before polling.
+
   presenceTimer = setTimeout(poll, 1500);
 }
 
-/* ============================================================
-   repos (live from the github api)
-   ============================================================ */
 const LANG_COLORS = {
   JavaScript: "#f1e05a", TypeScript: "#3178c6", CSS: "#a978e6", HTML: "#e34c26", "C++": "#f34b7d",
   C: "#8d9bb0", Python: "#3572a5", Rust: "#dea584", Go: "#00add8", Lua: "#5b6cf0", Java: "#b07219", Shell: "#89e051",
@@ -524,7 +486,7 @@ async function loadRepos() {
   }
   try {
     const snapshot = await repoCache.get("repos", async () => {
-      // github allows 60 unauthenticated requests an hour, so keep a 10 minute copy
+
       let data = null;
       let at = Date.now();
       try {
@@ -535,7 +497,7 @@ async function loadRepos() {
         }
       } catch {}
       if (!data) {
-        const r = await request("https://api.github.com/users/xtpm/repos?sort=pushed&per_page=100");
+        const r = await request("https://api.github.com/users/cloversdew/repos?sort=pushed&per_page=100");
         if (!r.ok) throw new Error(r.status);
         data = r.json()
           .filter((x) => !x.fork)
@@ -558,19 +520,17 @@ async function loadRepos() {
       renderLastWorked();
     }
   } catch {
-    // Preserve existing rows if revalidation fails; the next visit retries.
-    if (!repos) $("#repoList").innerHTML = '<p class="empty">couldn\'t reach github right now. <a class="u" href="https://github.com/xtpm" target="_blank" rel="noopener">see them there</a></p>';
+
+    if (!repos) $("#repoList").innerHTML = '<p class="empty">couldn\'t reach github right now. <a class="u" href="https://github.com/cloversdew" target="_blank" rel="noopener">see them there</a></p>';
   }
 }
 
-/* Turn a README into a short plain-text summary: the descriptive paragraphs
-   and feature bullets, skipping setup/install/run sections and code. */
 const SKIP_SECTION = /^(setup|install|installation|run|run locally|running|local development|development|dev|usage|build|building|requirements|prerequisites|getting started|quick ?start|license|contributing|scripts|deploy|deployment|configuration|config|env|environment|commands|controls|troubleshooting|music|credits|assets|notes|todo|changelog|files|project structure|structure|faq)\b/i;
-// keep summaries short: cut at a word boundary
+
 const trim = (s, n = 300) => (s.length <= n ? s : s.slice(0, s.lastIndexOf(" ", n)).replace(/[,.;:]$/, "") + "…");
 function summarize(md) {
   const clean = (s) => s
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1") // links -> their text
+    .replace(/\[([^\]]+)\]\([^)]*\)/g, "$1")
     .replace(/[*_`~]/g, "")
     .replace(/\s+/g, " ")
     .trim();
@@ -603,7 +563,7 @@ const readmes = createAsyncCache({ ttl: 600000 });
 function readme(r) {
   return readmes.get(`${r.name}/${r.branch || "main"}`, async () => {
     for (const f of ["README.md", "readme.md", "Readme.md"]) {
-      const res = await request(`https://raw.githubusercontent.com/xtpm/${r.name}/${r.branch || "main"}/${f}`);
+      const res = await request(`https://raw.githubusercontent.com/cloversdew/${r.name}/${r.branch || "main"}/${f}`);
       if (res.ok) return res.text;
       if (res.status !== 404) throw new Error(res.status);
     }
@@ -637,7 +597,7 @@ function repoRow(r) {
 async function toggleRepo(row, r) {
   const btn = $(".repo-main", row);
   const open = btn.getAttribute("aria-expanded") !== "true";
-  // only one open at a time
+
   $$(".repo.open").forEach((o) => { if (o !== row) { o.classList.remove("open"); $(".repo-main", o).setAttribute("aria-expanded", "false"); } });
   row.classList.toggle("open", open);
   btn.setAttribute("aria-expanded", open);
@@ -698,7 +658,6 @@ function drawRepos() {
 }
 $("#repoSearch").addEventListener("input", drawRepos);
 
-/* ---------- last worked on: the most recently pushed repo + a live timer ---------- */
 let lastRepo = null;
 function sinceText(ms) {
   let s = Math.max(0, Math.floor(ms / 1000));
@@ -724,7 +683,6 @@ function renderLastWorked() {
   tickSince();
 }
 
-// open a repo's info panel in the list, scrolling it into view
 function openRepo(name) {
   const search = $("#repoSearch");
   if (search.value) { search.value = ""; drawRepos(); }
@@ -736,14 +694,13 @@ function openRepo(name) {
   row.classList.remove("flash"); void row.offsetWidth; row.classList.add("flash");
 }
 $("#lastWorked").addEventListener("click", () => lastRepo && openRepo(lastRepo.name));
-// from the about page: the link already switches to repos; then open that repo
+
 $("#lastRepoAbout").addEventListener("click", () => {
   if (!lastRepo) return;
   const name = lastRepo.name;
   setTimeout(() => loadRepos().then(() => openRepo(name)), 650);
 });
 
-/* ---------- music tab: what's on spotify ---------- */
 let musicSignature = null;
 let updateSpotifyProgress = () => {};
 const musicVisible = () => entered && !document.hidden && current === "about" && !$('[data-sub="music"]').hidden;
@@ -780,9 +737,6 @@ function renderMusic() {
   el.replaceChildren(...rows);
 }
 
-/* ---------- music tab: recently played ----------
-   A Cloudflare Worker (see worker/) checks Lanyard every minute and logs each
-   new Spotify play; this reads that log. */
 const playedAgo = (t) => {
   const m = Math.floor((Date.now() - t) / 60000);
   if (m < 1) return "just now";
@@ -799,15 +753,12 @@ const historyRows = new Map();
 
 const samePlay = (a, b) => a.id === b.id && Math.abs(a.start - b.start) < 5000;
 
-// combine two lists of plays: no duplicates, newest first, last 50
 function mergePlays(a, b) {
   const out = [...a];
   for (const p of b) if (!out.some((q) => samePlay(p, q))) out.push(p);
   return out.sort((x, y) => y.start - x.start).slice(0, 50);
 }
 
-// a song just finished on this page: show it in the list immediately
-// (the worker logs it too; the merge stops it showing twice)
 function notePlay(p) {
   if (!p) return;
   plays = mergePlays(plays || [], [p]);
@@ -834,7 +785,7 @@ function renderHistory() {
   if (!musicVisible()) return;
   const el = $("#historyList");
   if (!el || !plays) return;
-  // skip the entry for the song that's playing right now; it's already shown above
+
   const currentPlay = spotify && playFrom(spotify);
   const items = plays.filter((p) => !currentPlay || !samePlay(p, currentPlay));
   $("#histCount").textContent = items.length ? `· ${items.length}` : "";
@@ -868,17 +819,10 @@ function renderHistory() {
   if (el.children.length !== rows.length || rows.some((row, i) => el.children[i] !== row)) el.replaceChildren(...rows);
 }
 
-/* ============================================================
-   settings + sound
-   ============================================================ */
-/* Background music starts on entry when enabled. The source is assigned
-   on demand so a muted visit never downloads the track. */
 const audio = $("#audio");
 const MUSIC_VOLUME = 0.15;
 const TRACK = "/assets/music/background.mp3";
 
-// a timer, not requestAnimationFrame: rAF stops in background tabs, which
-// left the music "playing" at volume 0
 let fadeTimer;
 function fadeTo(target, ms = 1800) {
   clearInterval(fadeTimer);
@@ -909,7 +853,7 @@ async function startMusic() {
     if (!settings.music) { audio.pause(); return; }
     fadeTo(MUSIC_VOLUME);
   } catch (error) {
-    // blocked until the first click / tap / key press
+
     if (waitingForGesture || error.name !== "NotAllowedError") return;
     waitingForGesture = true;
     const go = () => {
@@ -931,7 +875,7 @@ function setMusic(on) {
 }
 $("#soundBtn").addEventListener("click", () => setMusic(!settings.music));
 showMusic();
-// safety net: any click or key press makes sure the music is actually audible
+
 ["pointerdown", "keydown"].forEach((ev) =>
   addEventListener(ev, () => {
     if (!entered || !settings.music || !audio.src) return;
@@ -957,7 +901,6 @@ $$("[data-setting]").forEach((i) =>
 );
 motionPreference.addEventListener("change", applySettings);
 
-/* ---------- background video ---------- */
 function applyVideo() {
   const v = $("#bg");
   if (entered && !document.hidden && settings.video && !reducedMotion()) {
@@ -967,8 +910,6 @@ function applyVideo() {
   else v.pause();
 }
 
-/* Work follows the visible panel. Music playback remains independent so
-   visitors who chose to listen can keep it playing in another tab. */
 let displayTimer, displayCadence = 0;
 let historyTimer, historyActive = false, historyGeneration = 0;
 function syncHistory(active) {
@@ -1032,7 +973,6 @@ runtimeReady = true;
 applySettings();
 syncRuntime();
 
-/* ---------- open a deep link (#repos etc.) once everything above exists ---------- */
 {
   const h = location.hash.slice(1);
   if (SECTIONS.includes(h)) go(h, { push: false });
