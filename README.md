@@ -1,16 +1,31 @@
 # cloverslove
 
-my personal site. a title-screen style menu over a looping video background, with sections for
-about me, my github repos, socials and settings.
+my personal site, [tsundere.vip](https://tsundere.vip/). it's styled like a hyprland desktop shell:
+a login greeter, a side bar with workspaces, and tiled glassy windows over a video wallpaper.
 
 ## what's in it
 
-- **menu** you can move with the mouse wheel, arrow keys or W/S, and open with click or enter
-- **about me** with live discord status and spotify (via [lanyard](https://github.com/Phineas/lanyard)),
-  a birthday countdown, and a github contribution grid drawn from data
-- **repos** pulled live from the github api; click one to see a summary of its readme
-- **socials** and **settings** (music, menu sounds, moving background, less motion)
-- menu sound effects are synthesized in the browser (`sfx.js`), no audio files needed
+- **login greeter** that types a password and logs into the desktop on every visit (click or press a key to speed it up)
+- **bar** with workspaces, the focused window's title, a clock that opens the dashboard, and a lock button
+- **home**: a fastfetch window, a discord profile card, the spotify player and recently played
+- **code**: the github contribution grid, last worked on, and every repo
+- **music**: a visualizer, top artists and an album wall built from the listening log
+- **links**: an about page styled like neovim, and socials
+- **dashboard** that drops down from the top edge with the time, a calendar, birthday countdown and media
+- live data from [lanyard](https://github.com/Phineas/lanyard) (discord + spotify), the github api,
+  and the listening-log worker in `worker/`
+
+switch workspaces with the bar, keys `1`–`4`, or the scroll wheel. `d` toggles the dashboard.
+
+## files
+
+| file | what it is |
+| --- | --- |
+| `index.html` / `style.css` / `main.js` | the page, its styles and its behaviour |
+| `data.js` | profile info (bio, pronouns, socials, birthday) and the live data fetchers |
+| `worker/` | cloudflare worker that logs spotify plays for the recently played list |
+
+the theme comes from one value, `--hue` at the top of `style.css` (158 is mint).
 
 ## run it
 
@@ -19,20 +34,14 @@ npm install
 npm run dev
 ```
 
-run the regression checks with `npm test`, or make a production build with `npm run build`.
+run the worker tests with `npm test`, or make a production build with `npm run build`.
 
 ## media
 
 | file | used for |
 | --- | --- |
-| `public/assets/video/rikka-poster.webp` | a frame from the video, shown on the entry screen and when motion is off |
-| `public/assets/video/rikka.mp4` | 1080p background on all screens, loaded after entering (sleeping rikka from chūnibyō, via moewalls) |
-| `public/assets/video/rikka-4k.mp4` | original 4K copy, kept in the repo but not loaded by the site |
-| `public/assets/music/background.mp3` | background music (sabbath, from the saya no uta ost) |
+| `public/assets/video/rikka.mp4` | the desktop wallpaper (sleeping rikka from chūnibyō, via moewalls) |
+| `public/assets/video/rikka-poster.webp` | a still frame, shown behind the login screen and while the video loads |
 
-neither is mine; they're here for a non-commercial personal site and belong to their owners.
-swap in your own files with the same names to change them.
-
-optional: put your own sound effects in `public/assets/sfx/` and add their paths to
-`CUSTOM_FILES` in `sfx.js` (see the readme there). unlisted sounds keep the built-in blips,
-so the site never has to guess which files exist.
+the video isn't mine; it's here for a non-commercial personal site and belongs to its owners.
+swap in your own files with the same names to change it.
