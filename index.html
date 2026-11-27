@@ -1,171 +1,77 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#2a2440" />
-  <title>dylan</title>
-  <meta name="description" content="dylan — cybersecurity student and independent developer from pennsylvania." />
-  <link rel="icon" href="/favicon.ico" sizes="16x16" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Young+Serif&family=DotGothic16&family=Zen+Maru+Gothic:wght@400;500;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="/style.css" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>dylan</title>
+<link rel="icon" href="/favicon.ico" sizes="16x16">
+<meta name="description" content="dylan, cybersecurity student in pennsylvania. what i'm listening to and working on.">
+<meta name="color-scheme" content="light dark">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css">
 </head>
-<body class="is-home is-locked">
-
-  <div class="world" aria-hidden="true">
-    <div class="scene" id="scene">
-
-      <video id="bg" muted loop playsinline preload="none" poster="/assets/video/rikka-poster.webp"></video>
-    </div>
-    <div class="tint"></div>
-    <div class="scan"></div>
-  </div>
-
-  <div class="splash" id="splash" role="button" tabindex="0" aria-label="enter the site">
-    <div class="curtain top" aria-hidden="true"></div>
-    <div class="curtain bottom" aria-hidden="true"></div>
-    <div class="seam" aria-hidden="true"></div>
-    <div class="splash-inner">
-      <p class="splash-name">click to continue<i class="caret" aria-hidden="true"></i></p>
-      <span class="splash-rule"></span>
-    </div>
-    <p class="splash-foot">its all luck</p>
-  </div>
-
-  <div class="home" id="home" inert>
-    <div class="brand-slot" id="homeSlot">
-      <a class="brand" id="brand" href="#" aria-label="dylan, cybersecurity student. back to menu" data-nav>
-        <span class="brand-name">dylan</span>
-        <span class="brand-sub">cybersecurity student</span>
-      </a>
-    </div>
-
-    <nav class="menu" id="menu" aria-label="main menu">
-      <button data-go="about" data-nav><span>about me</span></button>
-      <button data-go="repos" data-nav><span>repos</span></button>
-      <button data-go="socials" data-nav><span>socials</span></button>
-      <button data-go="settings" data-nav><span>settings</span></button>
+<body>
+<div class="wrap">
+<div class="top">
+  <header class="nav">
+    <h1 class="nav-name" id="name">dylan</h1>
+    <nav class="nav-links" aria-label="more about dylan">
+      <button type="button" class="nav-btn" aria-expanded="false" aria-controls="p-recent">recent</button>
+      <button type="button" class="nav-btn" aria-expanded="false" aria-controls="p-activity">activity</button>
+      <button type="button" class="nav-btn" aria-expanded="false" aria-controls="p-repos">repos</button>
+      <button type="button" class="nav-btn" aria-expanded="false" aria-controls="p-elsewhere">elsewhere</button>
     </nav>
-
-    <p class="home-hint">its all luck</p>
-  </div>
-
-  <div class="column" id="column" aria-live="polite" inert>
-    <div class="column-brand" id="columnSlot"></div>
-
-    <div class="column-head">
-      <button class="back" id="back" data-nav>‹ back</button>
-      <span class="column-title" id="columnTitle"></span>
+    <div class="nav-meta">
+      <p><time id="pa-time"></time> <span class="muted">in pa</span></p>
+      <p class="status" id="status" aria-live="polite"><span class="dot" aria-hidden="true"></span><span class="muted">connecting</span></p>
     </div>
+  </header>
 
-    <div class="subtabs" id="subtabs" role="tablist"></div>
+  <div class="panels">
+    <section class="panel p-recent" id="p-recent" aria-labelledby="h-recent" inert>
+      <h2 class="lbl" id="h-recent">recently played</h2>
+      <div class="body"><ol class="rows hist" id="hist"><li class="status-msg">loading the log…</li></ol></div>
+    </section>
 
-    <div class="pane" id="pane">
+    <section class="panel p-activity" id="p-activity" aria-labelledby="h-act" inert>
+      <h2 class="lbl" id="h-act">activity</h2>
+      <div class="body">
+        <div id="contrib"><p class="status-msg">loading contributions…</p></div>
+        <p class="last" id="last"><span class="k">last worked on</span><span class="status-msg">loading…</span></p>
+      </div>
+    </section>
 
-      <section data-section="about" data-title="about me" hidden>
-        <div data-sub="me">
-          <div class="hello">
-            <img class="hello-av" id="dAvatar" src="https://cdn.discordapp.com/avatars/262467539685212160/5015670a74a26d459620fa25a56ab360.png?size=128" loading="lazy" width="54" height="54" alt="" />
-            <div>
-              <h2>hi, i'm dylan!</h2>
-              <p class="presence"><span class="pdot" id="dDot"></span><span id="dStatus">checking discord…</span></p>
-            </div>
-          </div>
-          <p>i'm 20, studying cybersecurity and building things on the side out of pennsylvania.</p>
-          <p>mostly web tools, interfaces, and little corners of the internet like this one. the code lives on <a class="u" href="https://github.com/cloversdew" target="_blank" rel="noopener">github</a>.</p>
-          <p>the rest of the time i'm hunting for <a class="u" href="https://www.discogs.com/user/bypassing" target="_blank" rel="noopener">cds</a>. lots of shibuya-kei, some hyperpop, and anything Lamp ever put out.</p>
+    <section class="panel p-repos" id="p-repos" aria-labelledby="h-repos" inert>
+      <h2 class="lbl" id="h-repos">repos <span class="num" id="repo-count"></span></h2>
+      <div class="body"><ul class="rows repos" id="repos"><li class="status-msg">loading repositories…</li></ul></div>
+    </section>
 
-          <dl class="facts">
-            <div>
-              <dt>right now</dt>
-              <dd><span id="actTitle">not doing anything</span> <small id="actSub">discord is quiet.</small></dd>
-            </div>
-            <div>
-              <dt>last worked on</dt>
-              <dd><a class="u" id="lastRepoAbout" href="#repos">…</a> <small><span class="since" data-since></span> ago</small></dd>
-            </div>
-            <div>
-              <dt>birthday</dt>
-              <dd><span id="bdayCount">—</span> <small>until june 12</small></dd>
-            </div>
-          </dl>
+    <section class="panel p-elsewhere" id="p-elsewhere" aria-labelledby="h-else" inert>
+      <h2 class="lbl" id="h-else">elsewhere</h2>
+      <ul class="rows socials" id="socials"></ul>
+    </section>
+  </div>
+</div>
 
-          <a class="gh" href="https://github.com/cloversdew" target="_blank" rel="noopener" aria-label="github contributions for cloversdew">
-            <span class="gh-head"><span>github</span><span id="ghTotal"></span></span>
-            <span class="gh-months" id="ghMonths"></span>
-            <span class="gh-grid" id="ghGrid"></span>
-          </a>
+<main class="frame sheet">
+  <section class="mod m-about" aria-labelledby="h-about">
+    <h2 class="lbl" id="h-about">about <span class="sep">·</span> <span id="tagline"></span> <span class="sep">·</span> <span id="loc"></span></h2>
+    <div class="bio" id="bio"></div>
+  </section>
 
-          <div class="icons">
-            <a href="https://github.com/cloversdew" target="_blank" rel="noopener" aria-label="github"><i class="ico" style="--i:url(https://cdn.jsdelivr.net/npm/simple-icons@13.0.0/icons/github.svg)"></i></a>
-            <a href="https://www.discogs.com/user/bypassing" target="_blank" rel="noopener" aria-label="discogs"><i class="ico" style="--i:url(https://cdn.jsdelivr.net/npm/simple-icons@13.0.0/icons/discogs.svg)"></i></a>
-            <a href="https://x.com/retrialed" target="_blank" rel="noopener" aria-label="x"><i class="ico" style="--i:url(https://cdn.jsdelivr.net/npm/simple-icons@13.0.0/icons/x.svg)"></i></a>
-            <a href="https://instagram.com/0mkx" target="_blank" rel="noopener" aria-label="instagram"><i class="ico" style="--i:url(https://cdn.jsdelivr.net/npm/simple-icons@13.0.0/icons/instagram.svg)"></i></a>
-            <a href="https://tiktok.com/@zuxm" target="_blank" rel="noopener" aria-label="tiktok"><i class="ico" style="--i:url(https://cdn.jsdelivr.net/npm/simple-icons@13.0.0/icons/tiktok.svg)"></i></a>
-            <a href="https://t.me/retria1" target="_blank" rel="noopener" aria-label="telegram"><i class="ico" style="--i:url(https://cdn.jsdelivr.net/npm/simple-icons@13.0.0/icons/telegram.svg)"></i></a>
-          </div>
-        </div>
-
-        <div data-sub="music">
-          <h2>on repeat</h2>
-          <p class="sub-note">whatever's on spotify right now</p>
-          <div class="list" id="musicList"></div>
-          <h3 class="hist-head">recently played <span id="histCount"></span></h3>
-          <div class="list" id="historyList"><p class="empty">loading…</p></div>
-        </div>
-      </section>
-
-      <section data-section="repos" data-title="repos" hidden>
-        <div data-sub="repos">
-          <h2>things i've built</h2>
-          <p class="sub-note"><span id="repoCount">…</span> public repos, newest first. all on <a class="u" href="https://github.com/cloversdew" target="_blank" rel="noopener">github</a></p>
-          <button class="last-worked" id="lastWorked" hidden>
-            <span class="lw-label"><i class="lw-dot"></i>last worked on</span>
-            <b id="lastRepoName"></b>
-            <span class="lw-timer"><span class="since" data-since></span> ago</span>
-          </button>
-          <input class="search" id="repoSearch" type="search" placeholder="search…" aria-label="search repos" />
-          <div class="list" id="repoList"><p class="empty">loading…</p></div>
-        </div>
-      </section>
-
-      <section data-section="socials" data-title="socials" hidden>
-        <div data-sub="links">
-          <div class="links">
-            <a href="https://github.com/cloversdew" target="_blank" rel="noopener"><b>github</b><span>cloversdew</span></a>
-            <a href="https://www.discogs.com/user/bypassing" target="_blank" rel="noopener"><b>discogs</b><span>bypassing</span></a>
-            <a href="https://x.com/retrialed" target="_blank" rel="noopener"><b>x</b><span>retrialed</span></a>
-            <a href="https://instagram.com/0mkx" target="_blank" rel="noopener"><b>instagram</b><span>0mkx</span></a>
-            <a href="https://tiktok.com/@zuxm" target="_blank" rel="noopener"><b>tiktok</b><span>zuxm</span></a>
-            <a href="https://t.me/retria1" target="_blank" rel="noopener"><b>telegram</b><span>retria1</span></a>
-            <a class="static"><b>discord</b><span>yikesdylan</span></a>
-          </div>
-        </div>
-      </section>
-
-      <section data-section="settings" data-title="settings" hidden>
-        <div data-sub="settings">
-          <div class="settings">
-            <label class="opt"><span>music</span><input type="checkbox" data-setting="music" /><i class="sw"></i></label>
-            <label class="opt"><span>menu sounds</span><input type="checkbox" data-setting="sfx" checked /><i class="sw"></i></label>
-            <label class="opt"><span>moving background</span><input type="checkbox" data-setting="video" checked /><i class="sw"></i></label>
-            <label class="opt"><span>less motion</span><input type="checkbox" data-setting="calm" /><i class="sw"></i></label>          </div>
-        </div>
-      </section>
+  <section class="mod m-now" aria-labelledby="h-now">
+    <h2 class="lbl" id="h-now">now playing</h2>
+    <div class="meta">
+      <div class="discord" id="discord" aria-live="polite"><p class="status-msg">connecting to discord…</p></div>
+      <div class="bday"><p class="muted" id="bday-label">next birthday in</p><time class="tick" id="bday"></time></div>
     </div>
-  </div>
+    <div id="np"><p class="status-msg">checking spotify…</p></div>
+  </section>
+</main>
+</div>
 
-  <div class="corner bl" inert>
-    <button class="cbtn" id="soundBtn" aria-pressed="false"><i class="eq"><b></b><b></b><b></b></i><span id="soundState">music off</span></button>
-  </div>
-  <div class="corner br" inert>
-    <p class="msg" id="msg"></p>
-    <p class="clock"><span id="clock">--:--</span> in pa</p>
-  </div>
-
-  <audio id="audio" loop preload="none"></audio>
-  <script type="module" src="/main.js"></script>
+<script type="module" src="/main.js"></script>
 </body>
 </html>
