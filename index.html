@@ -2,74 +2,209 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>dylan</title>
 <link rel="icon" href="/favicon.ico" sizes="16x16">
-<meta name="description" content="dylan, cybersecurity student in pennsylvania. what i'm listening to and working on.">
-<meta name="color-scheme" content="light dark">
+<meta name="description" content="dylan, cybersecurity student in pennsylvania.">
+<meta name="color-scheme" content="dark">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Schibsted+Grotesk:wght@400..700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@300..700&family=Pacifico&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&icon_names=arrow_forward,calendar_month,chat_bubble,check,close,code,content_copy,graphic_eq,headphones,home,link,lock,music_note,north_east,notifications,power_settings_new,terminal&display=block" rel="stylesheet">
 <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-<div class="wrap">
-<div class="top">
-  <header class="nav">
-    <h1 class="nav-name" id="name">dylan</h1>
-    <nav class="nav-links" aria-label="more about dylan">
-      <button type="button" class="nav-btn" aria-expanded="false" aria-controls="p-recent">recent</button>
-      <button type="button" class="nav-btn" aria-expanded="false" aria-controls="p-activity">activity</button>
-      <button type="button" class="nav-btn" aria-expanded="false" aria-controls="p-repos">repos</button>
-      <button type="button" class="nav-btn" aria-expanded="false" aria-controls="p-elsewhere">elsewhere</button>
+<div class="screen">
+  <aside class="bar" aria-label="shell bar">
+    <button type="button" class="logo" id="logo" data-tip="dashboard · d" aria-label="open dashboard" aria-expanded="false" aria-controls="dash">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><g id="leaf"><path d="M12 12C10 10.3 6.6 8.6 6.6 6.1a2.7 2.7 0 0 1 5.4-.7 2.7 2.7 0 0 1 5.4.7c0 2.5-3.4 4.2-5.4 5.9Z"/></g><use href="#leaf" transform="rotate(90 12 12)"/><use href="#leaf" transform="rotate(180 12 12)"/><use href="#leaf" transform="rotate(270 12 12)"/></svg>
+    </button>
+    <nav class="ws" id="ws" aria-label="workspaces" style="--i:0">
+      <span class="ws-ind" aria-hidden="true"></span>
+      <button type="button" data-ws="0" data-tip="1 · home" aria-label="workspace 1: home" aria-current="true"><span class="msym">home</span></button>
+      <button type="button" data-ws="1" data-tip="2 · code &amp; repos" aria-label="workspace 2: code"><span class="msym">code</span></button>
+      <button type="button" data-ws="2" data-tip="3 · music" aria-label="workspace 3: music"><span class="msym">headphones</span></button>
+      <button type="button" data-ws="3" data-tip="4 · about &amp; links" aria-label="workspace 4: links"><span class="msym">link</span></button>
     </nav>
-    <div class="nav-meta">
-      <p><time id="pa-time"></time> <span class="muted">in pa</span></p>
-      <p class="status" id="status" aria-live="polite"><span class="dot" aria-hidden="true"></span><span class="muted">connecting</span></p>
+    <p class="title" id="wintitle" aria-live="polite">kitty — fastfetch</p>
+    <div class="tray">
+      <span class="msym tray-music" id="tray-music" title="not listening">music_note</span>
+      <span class="tray-dot" id="tray-dot" title="discord"></span>
     </div>
-  </header>
+    <button type="button" class="clock" id="clock" data-tip="dashboard" aria-label="open dashboard" aria-controls="dash"><span id="hh">--</span><span id="mm">--</span></button>
+    <button type="button" class="power" id="power" data-tip="lock" aria-label="lock screen"><span class="msym">power_settings_new</span></button>
+  </aside>
 
-  <div class="panels">
-    <section class="panel p-recent" id="p-recent" aria-labelledby="h-recent" inert>
-      <h2 class="lbl" id="h-recent">recently played</h2>
-      <div class="body"><ol class="rows hist" id="hist"><li class="status-msg">loading the log…</li></ol></div>
-    </section>
+  <main class="desk" id="desk">
+    <video class="wall" id="wall" autoplay muted loop playsinline preload="auto" poster="/assets/video/rikka-poster.webp" src="/assets/video/rikka.mp4" aria-hidden="true"></video>
+    <div class="workspaces" id="workspaces" style="--ws:0">
 
-    <section class="panel p-activity" id="p-activity" aria-labelledby="h-act" inert>
-      <h2 class="lbl" id="h-act">activity</h2>
-      <div class="body">
-        <div id="contrib"><p class="status-msg">loading contributions…</p></div>
-        <p class="last" id="last"><span class="k">last worked on</span><span class="status-msg">loading…</span></p>
+      <section class="workspace w-home" aria-label="home">
+        <article class="win t-fetch active" data-title="kitty — fastfetch">
+          <header class="win-head"><span class="msym">terminal</span>kitty <span class="dim">~</span></header>
+          <div class="win-body term">
+            <p class="cmd"><span class="pr">❯</span> fastfetch</p>
+            <div class="ff">
+<pre class="ff-art" aria-hidden="true">⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣀⣀⣀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣴⣻⣯⣧⣤⣍⠙⢦⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣾⠛⢳⣿⣷⣿⣿⣶⠈⣧⠀⠀⠀⠀⠀⠀⠀⢀⣠⣤⣄⡀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⣠⠶⠛⠉⠉⠉⠓⡇⠀⠀⠁⠈⠈⠙⠛⠃⢸⠀⠀⠀⠀⢀⣴⣾⣿⣿⣿⣿⠙⣦⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⣸⣇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢸⠀⠀⠀⣠⠟⠋⠉⠉⠉⠁⠙⠳⢸⡇⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⢹⣿⡄⠀⠀⠀⠀⠀⠀⢢⠀⠀⢠⠀⠀⠀⠀⢸⠀⢀⡼⠁⠀⠀⠀⠀⠀⠀⠀⠀⣼⣁⣀⣀⡀⠀⠀
+⠀⠀⠀⠀⠀⠈⢿⡿⡄⠀⠀⠀⢄⠀⠀⢳⡀⠸⡄⠀⠀⠀⡸⢀⠞⠀⠀⠀⢀⠀⠀⠀⣠⠆⠀⠁⠀⠀⠉⠙⢷⣄
+⠀⠀⠀⠀⠀⠀⠈⢿⡟⣦⡀⠀⠀⠑⢄⠀⠱⡄⡇⠀⠀⠀⣧⡟⠀⠀⠀⠔⠁⣀⠔⠋⠀⠀⠀⠀⠀⠀⠀⠀⠀⢿
+⠀⠀⠀⠀⠀⠀⠀⠀⠻⣯⡙⢦⣄⠀⠈⠣⣀⠙⣾⡀⠀⢸⡏⠀⠀⣠⢊⠤⠊⣁⡠⠄⠀⠀⠀⠀⠀⠀⠀⠀⢀⡟
+⠀⠀⠀⢀⣠⣤⣤⡤⠤⠬⢽⣶⣽⣷⣦⠀⠈⠳⣼⣧⠀⡞⠀⣠⣾⣛⠥⠒⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣠⠞⠁
+⠀⢀⡾⣫⣝⢻⣿⠃⠀⠀⠀⠀⠀⠉⠙⠓⠶⢦⣬⣿⣶⣧⠾⠛⠉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⣠⠴⠚⠁⠀⠀
+⢠⡿⠟⠋⠉⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠤⢠⣾⢿⣿⣿⠶⢤⣄⡀⠀⠒⠒⠒⠒⠚⠋⠉⠉⠁⠀⠀⠀⠀⠀⠀
+⣼⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡠⣶⠟⠁⣼⣧⠻⣷⢤⡀⠉⠉⠛⠒⠦⢤⣀⡀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⢹⡄⠀⠀⠀⠀⠀⠀⠀⠀⠀⣀⠤⠊⢁⡔⠁⠀⠀⣿⡟⡷⢫⠳⡈⠒⢤⡀⠀⠀⠀⠀⠉⠓⠦⣄⠀⠀⠀⠀⠀⠀
+⠀⠻⣦⡀⠀⠀⠀⠀⡠⠔⠋⠀⠀⣠⠊⠀⠀⠀⣰⣿⣧⡇⠀⠇⠘⢆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠈⢷⡄⠀⠀⠀⠀
+⠀⠀⠈⠛⠲⣶⡆⠀⠀⠀⠀⠀⠀⠀⠀⠀⠄⣼⣿⣿⡿⠀⠀⠀⠀⠈⠣⡀⠀⠀⠀⠀⠀⠀⠀⠀⠈⣧⠀⠀⠀⠀
+⠀⠀⠀⠀⢠⡏⠇⠀⠀⠀⠀⠀⠀⠀⠀⠀⣼⣿⡇⢿⠁⠀⠀⠀⠀⠀⠀⠹⠀⠀⠀⠀⠀⠀⠀⠀⢀⡿⠀⠀⠀⠀
+⠀⠀⠀⠀⠸⣧⣾⣴⡀⠀⠀⠀⠀⠀⢀⠞⣹⣿⠀⠸⡇⡄⠀⠀⠀⠀⠀⠀⠹⣆⠀⠀⠀⠀⠀⣀⡾⠃⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠹⣿⡉⠱⠽⠀⠀⣠⡴⠋⣰⢣⠇⠀⠀⢻⣿⣤⠀⠀⠀⠀⠀⠀⢹⡗⠲⠶⠶⠛⠋⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠈⠛⠓⠒⠒⠋⠉⠀⣰⠃⡞⠀⠀⠀⠈⢿⣿⣿⣆⣀⢀⣀⠀⢸⡇⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⡴⠃⡼⠁⠀⠀⠀⠀⠀⠻⢿⣿⣋⣉⣠⡴⠟⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⢀⡞⠁⡼⠁⠀⠀⠀⠀⠀⠀⠀⠀⠈⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⣰⠋⠀⡼⠁⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⣾⣧⣤⡞⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀
+⠀⠀⠀⠀⠀⠀⠀⠀⠀⢈⣹⣉⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀⠀</pre>
+              <div class="ff-info">
+                <p class="ff-head"><b>clovers</b>@<b>dew</b></p>
+                <p class="ff-rule" aria-hidden="true">───────────</p>
+                <dl>
+                  <dt>os</dt><dd>tsundere.vip</dd>
+                  <dt>host</dt><dd id="ff-host"></dd>
+                  <dt>uptime</dt><dd id="ff-uptime"></dd>
+                  <dt>shell</dt><dd id="ff-role"></dd>
+                  <dt>wm</dt><dd>hyprland, in spirit</dd>
+                  <dt>focus</dt><dd>web dev · sysadmin</dd>
+                  <dt>learning</dt><dd>reverse engineering</dd>
+                  <dt>hobbies</dt><dd>music · car games</dd>
+                  <dt>packages</dt><dd id="ff-pkgs">…</dd>
+                  <dt>commit</dt><dd id="ff-last">…</dd>
+                  <dt>discord</dt><dd id="ff-status">connecting…</dd>
+                  <dt>media</dt><dd id="ff-music">…</dd>
+                  <dt>birthday</dt><dd id="ff-bday"></dd>
+                  <dt>locale</dt><dd id="ff-time"></dd>
+                </dl>
+                <p class="ff-colors" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></p>
+              </div>
+            </div>
+            <p class="cmd"><span class="pr">❯</span> <span class="cursor"></span></p>
+          </div>
+        </article>
+
+        <article class="win t-discord" data-title="vesktop — profile">
+          <header class="win-head"><span class="msym">graphic_eq</span>vesktop <span class="dim">profile</span></header>
+          <div class="win-body" id="discord"><p class="dim">connecting to discord…</p></div>
+        </article>
+
+        <article class="win t-player" data-title="spotify — now playing">
+          <header class="win-head"><span class="msym">music_note</span>spotify</header>
+          <div class="win-body" id="player"><p class="dim">checking spotify…</p></div>
+        </article>
+
+        <article class="win t-recent" data-title="spotify — recently played">
+          <header class="win-head"><span class="msym">headphones</span>recently played</header>
+          <div class="win-body"><ol class="hist" id="hist"><li class="dim">loading the log…</li></ol></div>
+        </article>
+      </section>
+
+      <section class="workspace w-code" aria-label="code">
+        <article class="win t-act" data-title="github — activity">
+          <header class="win-head"><span class="msym">code</span>github <span class="dim">— activity</span></header>
+          <div class="win-body">
+            <div id="contrib"><p class="dim">loading contributions…</p></div>
+            <p class="last" id="last"><span class="k">last worked on</span><span class="dim">loading…</span></p>
+          </div>
+        </article>
+        <article class="win t-repos" data-title="yazi — ~/repos">
+          <header class="win-head"><span class="msym">terminal</span>yazi <span class="dim">~/repos</span><span class="count" id="repo-count"></span></header>
+          <div class="win-body"><ul class="repos" id="repos"><li class="dim">loading repositories…</li></ul></div>
+        </article>
+      </section>
+
+      <section class="workspace w-music" aria-label="music">
+        <article class="win t-cava" data-title="cava">
+          <header class="win-head"><span class="msym">graphic_eq</span>cava</header>
+          <div class="win-body cava-body"><div class="cava" id="cava" aria-hidden="true"></div><p class="cava-cap" id="cava-cap">idle</p></div>
+        </article>
+        <article class="win t-top" data-title="spotify — top artists">
+          <header class="win-head"><span class="msym">headphones</span>top artists <span class="count" id="top-meta"></span></header>
+          <div class="win-body"><ol class="top" id="top"><li class="dim">loading the log…</li></ol></div>
+        </article>
+        <article class="win t-wall" data-title="album wall">
+          <header class="win-head"><span class="msym">music_note</span>album wall <span class="count" id="wall-meta"></span></header>
+          <div class="win-body"><div class="covers" id="covers"><p class="dim">loading covers…</p></div></div>
+        </article>
+      </section>
+
+      <section class="workspace w-links" aria-label="links">
+        <article class="win t-about" data-title="nvim — about.md">
+          <header class="win-head"><span class="msym">terminal</span>nvim <span class="dim">about.md</span></header>
+          <div class="win-body nvim"><ol class="nv-lines" id="about"></ol></div>
+          <p class="nv-status"><span class="nv-mode">NORMAL</span><span>about.md</span><span class="nv-r">utf-8 · markdown</span></p>
+        </article>
+        <article class="win t-links" data-title="links">
+          <header class="win-head"><span class="msym">link</span>elsewhere</header>
+          <div class="win-body"><ul class="links" id="socials"></ul></div>
+        </article>
+      </section>
+
+    </div>
+
+    <aside class="toast" id="toast" role="status" aria-label="how to get around" inert>
+      <div class="toast-head"><span class="msym">notifications</span><span>tsundere.vip</span><span class="dim">· now</span><button type="button" class="toast-x" id="toast-x" aria-label="dismiss"><span class="msym">close</span></button></div>
+      <p class="toast-title">welcome in, look around!</p>
+      <p class="toast-body">this site works like a desktop. click the workspaces on the <b class="dir-side">bar on the left</b><b class="dir-bottom">bar at the bottom</b> to switch pages<span class="kbd-hint">, press <kbd>1</kbd>–<kbd>4</kbd>, or scroll</span>.</p>
+      <div class="toast-ws">
+        <button type="button" data-go="0"><span class="msym">home</span>home</button>
+        <button type="button" data-go="1"><span class="msym">code</span>code</button>
+        <button type="button" data-go="2"><span class="msym">headphones</span>music</button>
+        <button type="button" data-go="3"><span class="msym">link</span>links</button>
       </div>
-    </section>
-
-    <section class="panel p-repos" id="p-repos" aria-labelledby="h-repos" inert>
-      <h2 class="lbl" id="h-repos">repos <span class="num" id="repo-count"></span></h2>
-      <div class="body"><ul class="rows repos" id="repos"><li class="status-msg">loading repositories…</li></ul></div>
-    </section>
-
-    <section class="panel p-elsewhere" id="p-elsewhere" aria-labelledby="h-else" inert>
-      <h2 class="lbl" id="h-else">elsewhere</h2>
-      <ul class="rows socials" id="socials"></ul>
-    </section>
-  </div>
+    </aside>
+  </main>
 </div>
 
-<main class="frame sheet">
-  <section class="mod m-about" aria-labelledby="h-about">
-    <h2 class="lbl" id="h-about">about <span class="sep">·</span> <span id="tagline"></span> <span class="sep">·</span> <span id="loc"></span></h2>
-    <div class="bio" id="bio"></div>
-  </section>
-
-  <section class="mod m-now" aria-labelledby="h-now">
-    <h2 class="lbl" id="h-now">now playing</h2>
-    <div class="meta">
-      <div class="discord" id="discord" aria-live="polite"><p class="status-msg">connecting to discord…</p></div>
-      <div class="bday"><p class="muted" id="bday-label">next birthday in</p><time class="tick" id="bday"></time></div>
+<div class="hot" id="hot" aria-hidden="true"></div>
+<section class="dash" id="dash" aria-label="dashboard" inert>
+  <div class="dash-grid">
+    <div class="card d-user">
+      <div class="d-avatar" id="d-avatar"></div>
+      <div>
+        <p class="d-name" id="d-name">dylan</p>
+        <p class="dim" id="d-tag"></p>
+        <p class="d-status" id="d-status"></p>
+      </div>
     </div>
-    <div id="np"><p class="status-msg">checking spotify…</p></div>
-  </section>
-</main>
+    <div class="card d-time">
+      <p class="d-clock" id="d-clock"></p>
+      <p class="dim" id="d-date"></p>
+      <p class="d-bday"><span class="dim" id="d-bday-label"></span> <span id="d-bday"></span></p>
+    </div>
+    <div class="card d-cal">
+      <p class="d-cal-head"><span class="msym">calendar_month</span><span id="d-month"></span></p>
+      <div class="cal" id="d-cal"></div>
+    </div>
+    <div class="card d-media" id="d-media"><p class="dim">nothing playing</p></div>
+  </div>
+</section>
+
+<div class="lock on boot" id="lock" role="dialog" aria-label="login screen">
+  <div class="lock-clock">
+    <p class="lock-time" id="lock-time"></p>
+    <p class="lock-date" id="lock-date"></p>
+  </div>
+  <div class="login" id="login">
+    <div class="login-av" id="login-av"><svg viewBox="0 0 24 24" aria-hidden="true"><use href="#leaf"/><use href="#leaf" transform="rotate(90 12 12)"/><use href="#leaf" transform="rotate(180 12 12)"/><use href="#leaf" transform="rotate(270 12 12)"/></svg></div>
+    <p class="login-user" id="login-user">dylan</p>
+    <div class="login-field" id="login-field"><span class="msym" id="login-icon">lock</span><span class="dots" id="dots"></span><span class="caret"></span><span class="msym login-go">arrow_forward</span></div>
+    <p class="login-msg" id="login-msg">starting session…</p>
+  </div>
+  <p class="lock-host">tsundere.vip · clovers@dew</p>
 </div>
 
 <script type="module" src="/main.js"></script>
